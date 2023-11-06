@@ -27,14 +27,17 @@ def main():
 
     print("target class available: ")
     print(classes)
+    print()
 
     print("train loader: ")
     print("no. of training sample: %d", len(trainloader))
     print("batch size: %d", trainloader.batch_size)
+    print()
 
     print("train loader: ")
     print("no. of test sample: %d", len(testloader))
     print("batch size: %d", testloader.batch_size)
+    print()
 
     # for batch_idx, (inputs, targets) in enumerate(trainloader):
     #     print(' '.join(f'{classes[targets[j]]:5s}' for j in range(batch_size)))
