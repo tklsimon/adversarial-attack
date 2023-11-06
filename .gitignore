@@ -1,2 +1,4 @@
 /.idea/**/*.*
 /.idea/*.*
+/baseline-model/data/**/*.*
+/baseline-model/data/**/*
