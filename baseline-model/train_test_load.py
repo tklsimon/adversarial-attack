@@ -13,8 +13,8 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', default=0, type=float, help='weight decay')
     # train and test parameters
     parser.add_argument('--train_epochs', default=10, type=float, help='no. of epochs for train')
-    parser.add_argument('--test_only', default=False, help='only test model')
-    parser.add_argument('--dry_run', default=True, help='will not train or test model')
+    parser.add_argument('--test_only', default=False, action='store_true', help='only test model')
+    parser.add_argument('--dry_run', default=False, action='store_true', help='will not train or test model')
     args = parser.parse_args()
 
     print("*** test-test-load script ***")
