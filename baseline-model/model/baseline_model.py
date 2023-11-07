@@ -2,14 +2,11 @@
 Import cifar10 image data with PyTorch
 https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 """
-import os
 from abc import abstractmethod, ABC
 
 import torch
-import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
-from torchvision.datasets import CIFAR10
-from torchvision.models import ResNet
+from torch.nn import Module
+from torch.utils.data import Dataset
 
 
 class BaselineModel(ABC):
@@ -33,72 +30,27 @@ class BaselineModel(ABC):
         self.train_loader = None
         self.test_loader = None
 
-        # initialize objects
-        self._init_data()
-        self._init_model()
-
-    def __str__(self):
-        return "model=baseline model %s, resume=%s, batch_size=%d, lr=%.3f, weigh_decay=%.3f, momentum=%.3f" % (
-            self.model.__class__.__name__, self.resume, self.batch_size, self.lr, self.weight_decay, self.momentum
-        )
-
-    def _init_data(self):
-        print('==> Preparing data..')
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-
-        train_set = CIFAR10(root='./data', train=True, download=True, transform=transform)
-        self.train_loader = DataLoader(train_set, batch_size=self.batch_size, shuffle=True, num_workers=2)
-
-        test_set = CIFAR10(root='./data', train=False, download=True, transform=transform)
-        self.test_loader = DataLoader(test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
-
-    def _init_model(self):
-        print('==> Building model..')
-        # make it able to override
-        self.model = self.get_model()
-        self.model = self.model.to(self.device_name)
-        if self.device_name == 'cuda':
-            self.model = torch.nn.DataParallel(self.model)
-            torch.backends.cudnn.benchmark = True
-        if self.resume:
-            print('==> Resuming from checkpoint..')
-            assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-            checkpoint = torch.load('./checkpoint/ckpt.pth')
-            self.model.load_state_dict(checkpoint['model'])
-
-    """override this method for the model type"""
-
+    """override this method for PyTorch model"""
     @abstractmethod
-    def get_model(self) -> ResNet:
+    def _set_model(self) -> Module:
         pass
 
-    def train(self, epoch: int):
-        print('\nEpoch: %d' % epoch)
-        self.model.train()
-        train_loss = 0
-        correct = 0
-        total = 0
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
-                                    weight_decay=self.weight_decay)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
-        criterion = torch.nn.CrossEntropyLoss()
-        for batch_idx, (inputs, targets) in enumerate(self.train_loader):
-            inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
-            optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = criterion(outputs, targets)
-            loss.backward()
-            optimizer.step()
+    """override this method for train dataset"""
+    @abstractmethod
+    def _set_train_set(self) -> Dataset:
+        pass
 
-            train_loss += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+    """override this method for test dataset"""
+    @abstractmethod
+    def _set_test_set(self) -> Dataset:
+        pass
 
-            log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                train_loss / (batch_idx + 1), 100. * correct / total, correct, total
-            )
-            print('[batch %2d]     %s' % (batch_idx, log_msg))
+    """override this method for train model"""
+    @abstractmethod
+    def train(self):
+        pass
+
+    """override this method for test model"""
+    @abstractmethod
+    def test(self):
+        pass

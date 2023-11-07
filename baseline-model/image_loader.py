@@ -8,7 +8,7 @@ from torchvision.datasets import CIFAR10
 
 
 def main():
-    print("---download data---")
+    print("*** download data script ***")
     transform = transforms.Compose(
         [transforms.ToTensor(),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -23,18 +23,18 @@ def main():
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-    print("---inspect train data---")
+    print("===inspect train data===")
 
     print("target class available: ")
     print(classes)
     print()
 
-    print("train loader: ")
+    print("===train loader===")
     print("no. of training sample: %d", len(trainloader))
     print("batch size: %d", trainloader.batch_size)
     print()
 
-    print("train loader: ")
+    print("===train loader===")
     print("no. of test sample: %d", len(testloader))
     print("batch size: %d", testloader.batch_size)
     print()
