@@ -73,4 +73,23 @@ class AbstractBaselineModel(BaselineModel, ABC):
             print('[batch %2d]     %s' % (batch_idx, log_msg))
 
     def test(self):
-        pass
+        self.model.eval()
+        test_loss = 0
+        correct = 0
+        total = 0
+        criterion = torch.nn.CrossEntropyLoss()
+        with torch.no_grad():
+            for batch_idx, (inputs, targets) in enumerate(self.test_loader):
+                inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
+                outputs = self.model(inputs)
+                loss = criterion(outputs, targets)
+
+                test_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+
+                log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
+                    test_loss / (batch_idx + 1), 100. * correct / total, correct, total
+                )
+                print('[batch %2d]     %s' % (batch_idx, log_msg))
