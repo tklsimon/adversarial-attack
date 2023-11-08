@@ -4,6 +4,7 @@ from abc import ABC
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from torch import nn
 
 from .baseline_model import BaselineModel
 
@@ -36,6 +37,7 @@ class AbstractBaselineModel(BaselineModel, ABC):
         print('==> Building model..')
         # make it able to override
         self.model = self._set_model()
+        self.model.fc = nn.Linear(512, 10)
         self.model = self.model.to(self.device_name)
         if self.device_name == 'cuda':
             self.model = torch.nn.DataParallel(self.model)
