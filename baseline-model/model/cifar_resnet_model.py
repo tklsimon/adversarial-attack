@@ -5,6 +5,7 @@ from torch.nn import Module
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10
 from torchvision.models import ResNet18_Weights, resnet18, resnet50, ResNet50_Weights
+from .resnet.resnet import ResNet, ResidualBlock
 
 from .abstract_baseline_model import AbstractBaselineModel
 
@@ -35,3 +36,9 @@ class Resnet50Model(ClfarDatsetModel):
 
     def _set_model(self) -> Module:
         return resnet50(weights=ResNet50_Weights.DEFAULT)
+
+
+class CustomResnetModel(ClfarDatsetModel):
+
+    def _set_model(self) -> Module:
+        return ResNet(ResidualBlock, [2, 2, 2])
