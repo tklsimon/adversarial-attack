@@ -3,6 +3,7 @@ from abc import ABC
 
 import torch
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from .baseline_model import BaselineModel
 
@@ -54,7 +55,9 @@ class AbstractBaselineModel(BaselineModel, ABC):
                                     weight_decay=self.weight_decay)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
         criterion = torch.nn.CrossEntropyLoss()
-        for batch_idx, (inputs, targets) in enumerate(self.train_loader):
+        progress_bar = tqdm(enumerate(self.train_loader), total=len(self.train_loader))
+
+        for batch_idx, (inputs, targets) in progress_bar:
             inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
             optimizer.zero_grad()
             outputs = self.model(inputs)
@@ -70,7 +73,8 @@ class AbstractBaselineModel(BaselineModel, ABC):
             log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
                 train_loss / (batch_idx + 1), 100. * correct / total, correct, total
             )
-            print('[batch %2d]     %s' % (batch_idx, log_msg))
+
+            progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
     def test(self):
         self.model.eval()
@@ -78,8 +82,9 @@ class AbstractBaselineModel(BaselineModel, ABC):
         correct = 0
         total = 0
         criterion = torch.nn.CrossEntropyLoss()
+        progress_bar = tqdm(enumerate(self.test_loader), total=len(self.test_loader))
         with torch.no_grad():
-            for batch_idx, (inputs, targets) in enumerate(self.test_loader):
+            for batch_idx, (inputs, targets) in progress_bar:
                 inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
                 outputs = self.model(inputs)
                 loss = criterion(outputs, targets)
@@ -92,4 +97,4 @@ class AbstractBaselineModel(BaselineModel, ABC):
                 log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
                     test_loss / (batch_idx + 1), 100. * correct / total, correct, total
                 )
-                print('[batch %2d]     %s' % (batch_idx, log_msg))
+                progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
