@@ -48,11 +48,11 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
     def train(self, epoch: int = 1):
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
                                     weight_decay=self.weight_decay)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epoch)
         criterion = torch.nn.CrossEntropyLoss()
 
         for i in range(epoch):
-            print('==> Train Epoch: %d..' % epoch)
+            print('==> Train Epoch: %d..' % i)
 
             self.model.train()
             train_loss = 0

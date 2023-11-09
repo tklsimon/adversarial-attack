@@ -25,7 +25,7 @@ if __name__ == '__main__':
     print("*** test-test-load script ***")
 
     # initialize scenario
-    model: Module = model_selector.get_default_resnet(152, 10, True)
+    model: Module = model_selector.get_default_resnet()
     train_set, test_set = dataset.get_normalized_cifar10_dataset()
     scenario: BaseTrainTestScenario = TrainTestScenario(checkpoint=args.checkpoint, batch_size=args.batch_size,
                                                         lr=args.lr, momentum=args.momentum,
@@ -38,13 +38,11 @@ if __name__ == '__main__':
         if not args.dry_run:
             scenario.test()
     else:
-        for epoch in range(args.train_epochs):
+        # train
+        print("===Train Model===")
+        if not args.dry_run:
             scenario.train(args.train_epochs)
-            # train
-            print("===Train Model===")
-            if not args.dry_run:
-                scenario.train()
-            # test
-            print("===Test Model===")
-            if not args.dry_run:
-                scenario.test()
+        # test
+        print("===Test Model===")
+        if not args.dry_run:
+            scenario.test()
