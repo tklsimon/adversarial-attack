@@ -24,7 +24,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         self._init_model()
 
     def __str__(self):
-        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.6f, weigh_decay=%.6f, momentum=%.6f" % (
+        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E" % (
             self.model.__class__.__name__,
             self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum
         )
