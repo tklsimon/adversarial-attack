@@ -25,7 +25,7 @@ if __name__ == '__main__':
     print("*** test-test-load script ***")
 
     # initialize scenario
-    model: Module = model_selector.get_custom_resnet152()
+    model: Module = model_selector.get_default_resnet(152, 10, True)
     train_set, test_set = dataset.get_normalized_cifar10_dataset()
     scenario: BaseTrainTestScenario = TrainTestScenario(checkpoint=args.checkpoint, batch_size=args.batch_size,
                                                         lr=args.lr, momentum=args.momentum,
