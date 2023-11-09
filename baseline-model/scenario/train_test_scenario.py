@@ -2,50 +2,47 @@ import os
 from abc import ABC
 
 import torch
+from torch.nn import Module
 from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
 from tqdm import tqdm
-from torch import nn
 
-from .baseline_model import BaselineModel
+from .base_train_test_scenario import BaseTrainTestScenario
 
 
-class AbstractBaselineModel(BaselineModel, ABC):
+class TrainTestScenario(BaseTrainTestScenario, ABC):
 
-    def __init__(self, model, resume: bool = False, lr: float = 0.001, batch_size: int = 4, momentum: float = 0.9,
-                 weight_decay: float = 0):
-        super().__init__(model, resume, lr, batch_size, momentum, weight_decay)
+    def __init__(self, checkpoint: str = None, lr: float = 0.001, batch_size: int = 4, momentum: float = 0.9,
+                 weight_decay: float = 0, model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
+        super().__init__(checkpoint=checkpoint, lr=lr, batch_size=batch_size, momentum=momentum,
+                         weight_decay=weight_decay,
+                         model=model, train_set=train_set, test_set=test_set)
 
         # initialize objects
+        self.device_name = 'cuda' if torch.cuda.is_available() else 'cpu'
         self._init_data()
         self._init_model()
 
     def __str__(self):
-        return "model=%s, resume=%s, batch_size=%d, lr=%.3f, weigh_decay=%.3f, momentum=%.3f" % (
-            self.model.__class__.__name__, self.resume, self.batch_size, self.lr, self.weight_decay, self.momentum
+        return "model=%s, checkpoint=%s, batch_size=%d, lr=%.3f, weigh_decay=%.3f, momentum=%.3f" % (
+            self.model.__class__.__name__, self.checkpoint, self.batch_size, self.lr, self.weight_decay, self.momentum
         )
 
     def _init_data(self):
         print('==> Preparing data..')
-
-        train_set = self._set_train_set()
-        self.train_loader = DataLoader(train_set, batch_size=self.batch_size, shuffle=True, num_workers=2)
-
-        test_set = self._set_test_set()
-        self.test_loader = DataLoader(test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
+        self.train_loader = DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=2)
+        self.test_loader = DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
 
     def _init_model(self):
         print('==> Building model..')
-        # make it able to override
-        self.model = self._set_model()
-        self.model.fc = nn.Linear(512, 10)
         self.model = self.model.to(self.device_name)
         if self.device_name == 'cuda':
             self.model = torch.nn.DataParallel(self.model)
             torch.backends.cudnn.benchmark = True
-        if self.resume:
+        if self.checkpoint:
             print('==> Resuming from checkpoint..')
             assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-            checkpoint = torch.load('./checkpoint/ckpt.pth')
+            checkpoint = torch.load('./checkpoint/' + self.checkpoint)  # e.g. ckpt.pth
             self.model.load_state_dict(checkpoint['model'])
 
     def train(self):
