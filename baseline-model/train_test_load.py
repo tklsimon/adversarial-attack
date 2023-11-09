@@ -1,12 +1,16 @@
 from argparse import ArgumentParser
 
-from model.baseline_model import BaselineModel
-from model.cifar_resnet_model import Resnet18Model
+from torch.nn import Module
+
+from dataset import dataset
+from model import model_selector
+from scenario.base_train_test_scenario import BaseTrainTestScenario
+from scenario.train_test_scenario import TrainTestScenario
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='PyTorch ResNet CIFAR10 Training')
     # model parameters
-    parser.add_argument('--resume', '-r', default=False, action='store_true', help='resume from checkpoint')
+    parser.add_argument('--checkpoint', default=None, type=str, help='resume from checkpoint')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=4, type=int, help='batch size')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
@@ -18,14 +22,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print("*** test-test-load script ***")
-    model: BaselineModel = Resnet18Model(None, batch_size=args.batch_size, lr=args.lr, momentum=args.momentum,
-                                         weight_decay=args.weight_decay, resume=args.resume)
-    print(model)
+
+    # initialize scenario
+    model: Module = model_selector.get_default_resnet18()
+    train_set, test_set = dataset.get_normalized_cifar10_dataset()
+    scenario: BaseTrainTestScenario = TrainTestScenario(checkpoint=args.checkpoint, batch_size=args.batch_size,
+                                                        lr=args.lr, momentum=args.momentum,
+                                                        weight_decay=args.weight_decay,
+                                                        model=model, train_set=train_set, test_set=test_set)
+    print(scenario)
 
     if args.test_only:
         print("===Test Model===")
         if not args.dry_run:
-            model.test()
+            scenario.test()
     else:
         for epoch in range(args.train_epochs):
             print()
@@ -33,8 +43,8 @@ if __name__ == '__main__':
             # train
             print("===Train Model===")
             if not args.dry_run:
-                model.train()
+                scenario.train()
             # test
             print("===Test Model===")
             if not args.dry_run:
-                model.test()
+                scenario.test()
