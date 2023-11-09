@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+import torch
 from torch.nn import Module
 
 from dataset import dataset
@@ -24,7 +25,7 @@ if __name__ == '__main__':
     print("*** test-test-load script ***")
 
     # initialize scenario
-    model: Module = model_selector.get_default_resnet18()
+    model: Module = model_selector.get_custom_resnet152()
     train_set, test_set = dataset.get_normalized_cifar10_dataset()
     scenario: BaseTrainTestScenario = TrainTestScenario(checkpoint=args.checkpoint, batch_size=args.batch_size,
                                                         lr=args.lr, momentum=args.momentum,
@@ -38,8 +39,7 @@ if __name__ == '__main__':
             scenario.test()
     else:
         for epoch in range(args.train_epochs):
-            print()
-            print('===Epoch: %d===' % epoch)
+            scenario.train(args.train_epochs)
             # train
             print("===Train Model===")
             if not args.dry_run:

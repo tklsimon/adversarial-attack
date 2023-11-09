@@ -35,7 +35,7 @@ class BaseTrainTestScenario(ABC):
     """override this method for train model"""
 
     @abstractmethod
-    def train(self):
+    def train(self, epoch: int = 1):
         pass
 
     """override this method for test model"""

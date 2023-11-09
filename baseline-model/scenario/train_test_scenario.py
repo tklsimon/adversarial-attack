@@ -45,35 +45,43 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
             checkpoint = torch.load('./checkpoint/' + self.checkpoint)  # e.g. ckpt.pth
             self.model.load_state_dict(checkpoint['model'])
 
-    def train(self):
-        self.model.train()
-        train_loss = 0
-        correct = 0
-        total = 0
+    def train(self, epoch: int = 1):
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
                                     weight_decay=self.weight_decay)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer)
         criterion = torch.nn.CrossEntropyLoss()
-        progress_bar = tqdm(enumerate(self.train_loader), total=len(self.train_loader))
 
-        for batch_idx, (inputs, targets) in progress_bar:
-            inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
-            optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = criterion(outputs, targets)
-            loss.backward()
-            optimizer.step()
+        for i in range(epoch):
+            print('==> Train Epoch: %d..' % epoch)
 
-            train_loss += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+            self.model.train()
+            train_loss = 0
+            correct = 0
+            total = 0
 
-            log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                train_loss / (batch_idx + 1), 100. * correct / total, correct, total
-            )
+            progress_bar = tqdm(enumerate(self.train_loader), total=len(self.train_loader))
 
-            progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
+            for batch_idx, (inputs, targets) in progress_bar:
+                inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
+
+                optimizer.zero_grad()
+                outputs = self.model(inputs)
+                loss = criterion(outputs, targets)
+                loss.backward()
+                optimizer.step()
+
+                train_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+
+                log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
+                    train_loss / (batch_idx + 1), 100. * correct / total, correct, total
+                )
+
+                progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
+
+            scheduler.step()
 
     def test(self):
         self.model.eval()
