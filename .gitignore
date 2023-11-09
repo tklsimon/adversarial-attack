@@ -1,6 +1,3 @@
-/.idea/**/*.*
-/.idea/*.*
-/baseline-model/data/**/*.*
-/baseline-model/data/**/*
-/baseline-model/checkpoint/**/*
-/baseline-model/checkpoint/*
+/.idea/**
+/baseline-model/data/**
+/baseline-model/checkpoint/**
