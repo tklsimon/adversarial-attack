@@ -33,6 +33,9 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         print('==> Preparing data..')
         self.train_loader = DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=2)
         self.test_loader = DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
+        print("target class available: ", self.classes)
+        print("no. of train sample: ", len(self.train_loader))
+        print("no. of test sample: ", len(self.test_loader))
 
     def _init_model(self):
         print('==> Building model..')
