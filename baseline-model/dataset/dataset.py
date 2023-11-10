@@ -1,7 +1,8 @@
+from typing import Tuple
+
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10
-from typing import Tuple
 
 
 def get_default_cifar10_dataset(download: bool = False) -> Tuple[Dataset, Dataset]:
@@ -16,3 +17,14 @@ def get_normalized_cifar10_dataset(download: bool = False) -> Tuple[Dataset, Dat
     ])
     return CIFAR10(root='./data', train=True, download=download, transform=transform), \
            CIFAR10(root='./data', train=False, download=download, transform=transform)
+
+
+def get_random_cifar10_dataset(download: bool = False) -> Tuple[Dataset, Dataset]:
+    transform = transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(32, padding=4),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+        transforms.ToTensor()
+    ])
+    return CIFAR10(root='./data', train=True, download=download, transform=transform), \
+           CIFAR10(root='./data', train=False, download=download, transform=transforms.ToTensor())

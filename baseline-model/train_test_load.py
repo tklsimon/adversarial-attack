@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 
 from torch.nn import Module
-import os
 
 from dataset import dataset
 from model import model_selector
@@ -20,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('--train_eval_ratio', default=0.99, type=float, help='ratio for train-eval split')
     parser.add_argument('--test_only', default=False, action='store_true', help='only test model')
     parser.add_argument('--dry_run', default=False, action='store_true', help='will not train or test model')
-    parser.add_argument('--load_data', default=False, action='store_true', help='downlaod data if not available')
+    parser.add_argument('--load_data', default=False, action='store_true', help='download data if not available')
     # model parameter
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
@@ -30,7 +29,7 @@ if __name__ == '__main__':
 
     # initialize scenario
     model: Module = model_selector.get_default_resnet()
-    train_set, test_set = dataset.get_normalized_cifar10_dataset(args.load_data)
+    train_set, test_set = dataset.get_random_cifar10_dataset(args.load_data)
     scenario: BaseTrainTestScenario = TrainTestScenario(load_path=args.load_path,
                                                         save_path=args.save_path,
                                                         batch_size=args.batch_size,
@@ -47,4 +46,3 @@ if __name__ == '__main__':
         scenario.train_eval_test_save(0)
     else:
         scenario.train_eval_test_save(args.train_epochs)
-
