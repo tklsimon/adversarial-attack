@@ -11,7 +11,7 @@ if __name__ == '__main__':
     parser = ArgumentParser(description='PyTorch ResNet CIFAR10 Training')
     # model parameters
     parser.add_argument('--lr', default=2e-4, type=float, help='learning rate')
-    parser.add_argument('--batch_size', default=32, type=int, help='batch size')
+    parser.add_argument('--batch_size', default=64, type=int, help='batch size')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight_decay', default=1e-6, type=float, help='weight decay')
     # train and test parameters
