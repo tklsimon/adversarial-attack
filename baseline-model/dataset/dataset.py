@@ -6,8 +6,11 @@ from torchvision.datasets import CIFAR10
 
 
 def get_default_cifar10_dataset(download: bool = False) -> Tuple[Dataset, Dataset]:
-    return CIFAR10(root='./data', train=True, download=download), \
-           CIFAR10(root='./data', train=False, download=download)
+    transform = transforms.Compose([
+        transforms.ToTensor()
+    ])
+    return CIFAR10(root='./data', train=True, download=download, transform=transform), \
+           CIFAR10(root='./data', train=False, download=download, transform=transform)
 
 
 def get_normalized_cifar10_dataset(download: bool = False) -> Tuple[Dataset, Dataset]:
@@ -26,5 +29,8 @@ def get_random_cifar10_dataset(download: bool = False) -> Tuple[Dataset, Dataset
         transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
         transforms.ToTensor()
     ])
+    test_transform = transforms.Compose([
+        transforms.ToTensor()
+    ])
     return CIFAR10(root='./data', train=True, download=download, transform=transform), \
-           CIFAR10(root='./data', train=False, download=download, transform=transforms.ToTensor())
+           CIFAR10(root='./data', train=False, download=download, transform=test_transform)
