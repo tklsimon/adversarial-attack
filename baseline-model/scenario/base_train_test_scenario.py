@@ -10,8 +10,9 @@ from torch.utils.data import Dataset
 
 class BaseTrainTestScenario(ABC):
 
-    def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4, momentum: float = 0.9,
-                 weight_decay: float = 0, model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
+    def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
+                 momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
+                 model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
         # set model
         self.model = model
 
@@ -23,6 +24,7 @@ class BaseTrainTestScenario(ABC):
         self.lr = lr
         self.momentum = momentum
         self.weight_decay = weight_decay
+        self.train_eval_ratio = train_eval_ratio
 
         # dataset dependent
         self.classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
@@ -32,21 +34,11 @@ class BaseTrainTestScenario(ABC):
         self.test_set = test_set
         self.train_loader = None
         self.test_loader = None
+        self.validation_loader = None
 
     """override this method for train model"""
 
     @abstractmethod
-    def train(self, epoch: int = 1):
+    def train_eval_test_save(self, epoch: int = 1):
         pass
 
-    """override this method for test model"""
-
-    @abstractmethod
-    def test(self):
-        pass
-
-    """override this method to save model"""
-
-    @abstractmethod
-    def save(self):
-        pass

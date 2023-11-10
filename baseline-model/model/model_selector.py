@@ -27,26 +27,16 @@ def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool =
     return net
 
 
-def get_custom_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool = True) -> nn.Module:
+def get_custom_resnet(layers: int = 18, num_classes: int = 10) -> nn.Module:
     net: nn.Module = None
     if layers == 18:
         net = ResNet(BasicBlock, [2, 2, 2, 2], num_classes)
-        if pretrain:
-            net.load_state_dict(model_zoo.load_url(ResNet18_Weights.DEFAULT.url))
     if layers == 34:
         net = ResNet(BasicBlock, [3, 4, 6, 3], num_classes)
-        if pretrain:
-            net.load_state_dict(model_zoo.load_url(ResNet34_Weights.DEFAULT.url))
     if layers == 50:
         net = ResNet(Bottleneck, [3, 4, 6, 3], num_classes)
-        if pretrain:
-            net.load_state_dict(model_zoo.load_url(ResNet50_Weights.DEFAULT.url))
     if layers == 101:
         net = ResNet(Bottleneck, [3, 4, 23, 3], num_classes)
-        if pretrain:
-            net.load_state_dict(model_zoo.load_url(ResNet101_Weights.DEFAULT.url))
     if layers == 152:
         net = ResNet(Bottleneck, [3, 8, 36, 3], num_classes)
-        if pretrain:
-            net.load_state_dict(model_zoo.load_url(ResNet152_Weights.DEFAULT.url))
     return net
