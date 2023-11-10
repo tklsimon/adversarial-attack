@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', default=0, type=float, help='weight decay')
     # train and test parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
+    parser.add_argument('--train_eval_ratio', default=0.99, type=float, help='ratio for train-eval split')
     parser.add_argument('--test_only', default=False, action='store_true', help='only test model')
     parser.add_argument('--dry_run', default=False, action='store_true', help='will not train or test model')
     parser.add_argument('--load_data', default=False, action='store_true', help='downlaod data if not available')
@@ -25,10 +26,10 @@ if __name__ == '__main__':
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
     args = parser.parse_args()
 
-    print("*** test-test-load script ***")
+    print("*** train-test-load script ***")
 
     # initialize scenario
-    model: Module = model_selector.get_default_resnet()
+    model: Module = model_selector.get_custom_resnet(pretrain=False)
     train_set, test_set = dataset.get_normalized_cifar10_dataset(args.load_data)
     scenario: BaseTrainTestScenario = TrainTestScenario(load_path=args.load_path,
                                                         save_path=args.save_path,
@@ -36,23 +37,17 @@ if __name__ == '__main__':
                                                         lr=args.lr,
                                                         momentum=args.momentum,
                                                         weight_decay=args.weight_decay,
+                                                        train_eval_ratio=args.train_eval_ratio,
                                                         model=model,
                                                         train_set=train_set,
                                                         test_set=test_set)
     print(scenario)
 
     if args.test_only:
-        print("===Test Model===")
-        if not args.dry_run:
-            scenario.test()
+        scenario.train_eval_test_save(0)
     else:
-        # train
-        print("===Train Model===")
-        if not args.dry_run:
-            scenario.train(args.train_epochs)
-        # test
-        print("===Test Model===")
-        if not args.dry_run:
-            scenario.test()
-    if args.save_path:
-        scenario.save()
+        if args.save_path:
+            scenario.train_eval_test_save(args.train_epochs, True)
+        else:
+            scenario.train_eval_test_save(args.train_epochs)
+
