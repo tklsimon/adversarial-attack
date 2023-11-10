@@ -3,11 +3,36 @@ from abc import ABC
 
 import torch
 from torch.nn import Module
+from torch.nn.modules.loss import _Loss
 from torch.utils.data import DataLoader, Subset
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
 from .base_train_test_scenario import BaseTrainTestScenario
+
+
+def test(model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
+    model.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+    progress_bar = tqdm(enumerate(data_loader), total=len(data_loader))
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in progress_bar:
+            inputs, targets = inputs.to(device_name), targets.to(device_name)
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+
+            test_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+            log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
+                test_loss / (batch_idx + 1), 100. * correct / total, correct, total
+            )
+            progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
+    return test_loss / len(data_loader)
 
 
 class TrainTestScenario(BaseTrainTestScenario, ABC):
@@ -111,29 +136,6 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
             scheduler.step()
 
-    def test(self):
-        self.model.eval()
-        test_loss = 0
-        correct = 0
-        total = 0
-        criterion = torch.nn.CrossEntropyLoss()
-        progress_bar = tqdm(enumerate(self.test_loader), total=len(self.test_loader))
-        with torch.no_grad():
-            for batch_idx, (inputs, targets) in progress_bar:
-                inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
-                outputs = self.model(inputs)
-                loss = criterion(outputs, targets)
-
-                test_loss += loss.item()
-                _, predicted = outputs.max(1)
-                total += targets.size(0)
-                correct += predicted.eq(targets).sum().item()
-
-                log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                    test_loss / (batch_idx + 1), 100. * correct / total, correct, total
-                )
-                progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
-
     def save(self):
         print('==> Save to checkpoint..')
         augmented_path = os.path.join("./checkpoint", self.save_path)
@@ -186,28 +188,8 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
             """validation"""
-            self.model.eval()  # switch to evaluation mode
-            eval_loss = 0
-            correct = 0
-            total = 0
-            criterion = torch.nn.CrossEntropyLoss()
-            progress_bar = tqdm(enumerate(self.validation_loader), total=len(self.validation_loader))
-            with torch.no_grad():
-                for batch_idx, (inputs, targets) in progress_bar:
-                    inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
-                    outputs = self.model(inputs)
-                    loss = criterion(outputs, targets)
-
-                    eval_loss += loss.item()
-                    _, predicted = outputs.max(1)
-                    total += targets.size(0)
-                    correct += predicted.eq(targets).sum().item()
-
-                    log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                        eval_loss / (batch_idx + 1), 100. * correct / total, correct, total
-                    )
-                    progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
-            # scheduler.step(eval_loss / len(self.validation_loader))
+            eval_loss: float = test(self.model, self.device_name, self.validation_loader, criterion)
+            # scheduler.step(eval_loss))
             scheduler.step()
 
             if save_best:
@@ -217,27 +199,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
         """test"""
         print('==> Test')
-        self.model.eval()  # switch to evaluation mode
-        test_loss = 0
-        correct = 0
-        total = 0
-        criterion = torch.nn.CrossEntropyLoss()
-        progress_bar = tqdm(enumerate(self.test_loader), total=len(self.test_loader))
-        with torch.no_grad():
-            for batch_idx, (inputs, targets) in progress_bar:
-                inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
-                outputs = self.model(inputs)
-                loss = criterion(outputs, targets)
-
-                test_loss += loss.item()
-                _, predicted = outputs.max(1)
-                total += targets.size(0)
-                correct += predicted.eq(targets).sum().item()
-
-                log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                    test_loss / (batch_idx + 1), 100. * correct / total, correct, total
-                )
-                progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
+        test_loss = test(self.model, self.device_name, self.test_loader, criterion)
 
         # save model
         if save_best:
