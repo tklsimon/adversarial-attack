@@ -46,8 +46,5 @@ if __name__ == '__main__':
     if args.test_only:
         scenario.train_eval_test_save(0)
     else:
-        if args.save_path:
-            scenario.train_eval_test_save(args.train_epochs, True)
-        else:
-            scenario.train_eval_test_save(args.train_epochs)
+        scenario.train_eval_test_save(args.train_epochs)
 

@@ -143,8 +143,9 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         save = {'state_dict': self.model.state_dict()}
         torch.save(save, augmented_path)
 
-    def train_eval_test_save(self, epoch: int = 1, save_best: bool = False):
+    def train_eval_test_save(self, epoch: int = 1):
         assert self.train_eval_ratio > 0
+        save_best = True if self.save_path else False
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
                                     weight_decay=self.weight_decay)
         scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, total_steps=len(self.train_loader),
