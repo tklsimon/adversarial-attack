@@ -187,7 +187,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
-            """validation"""
+            """evaluation"""
             eval_loss: float = test(self.model, self.device_name, self.validation_loader, criterion)
             # scheduler.step(eval_loss))
             scheduler.step()
@@ -201,7 +201,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         print('==> Test')
         test_loss = test(self.model, self.device_name, self.test_loader, criterion)
 
-        # save model
+        """save"""
         if save_best:
             print('==> Save to checkpoint..')
             augmented_path = os.path.join("./checkpoint", self.save_path)
