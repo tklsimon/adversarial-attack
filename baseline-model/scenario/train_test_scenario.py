@@ -147,7 +147,8 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         assert self.train_eval_ratio > 0
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
                                     weight_decay=self.weight_decay)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epoch)
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, total_steps=len(self.train_loader),
+                                                        epochs=epoch)
         criterion = torch.nn.CrossEntropyLoss()
 
         best_val_score = 0

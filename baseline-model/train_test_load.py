@@ -11,10 +11,10 @@ from scenario.train_test_scenario import TrainTestScenario
 if __name__ == '__main__':
     parser = ArgumentParser(description='PyTorch ResNet CIFAR10 Training')
     # model parameters
-    parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-    parser.add_argument('--batch_size', default=4, type=int, help='batch size')
+    parser.add_argument('--lr', default=2e-4, type=float, help='learning rate')
+    parser.add_argument('--batch_size', default=32, type=int, help='batch size')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
-    parser.add_argument('--weight_decay', default=0, type=float, help='weight decay')
+    parser.add_argument('--weight_decay', default=1e-6, type=float, help='weight decay')
     # train and test parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
     parser.add_argument('--train_eval_ratio', default=0.99, type=float, help='ratio for train-eval split')
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     print("*** train-test-load script ***")
 
     # initialize scenario
-    model: Module = model_selector.get_custom_resnet(pretrain=False)
+    model: Module = model_selector.get_default_resnet()
     train_set, test_set = dataset.get_normalized_cifar10_dataset(args.load_data)
     scenario: BaseTrainTestScenario = TrainTestScenario(load_path=args.load_path,
                                                         save_path=args.save_path,
