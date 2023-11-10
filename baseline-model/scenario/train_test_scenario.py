@@ -97,6 +97,8 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
                 os.makedirs(checkpoint_dir)
             checkpoint = torch.load(augmented_path)
             self.model.load_state_dict(checkpoint['state_dict'])
+            if 'param_dict' in checkpoint:
+                print("loaded model: ", checkpoint['param_dict'])
 
     def train(self, epoch: int = 1):
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
