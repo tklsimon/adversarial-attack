@@ -63,6 +63,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         # Calculate the number of samples for each split
         num_samples = len(self.train_set)
         train_size = int(self.train_eval_ratio * num_samples)
+        assert self.train_eval_ratio < 1
 
         # Create indices for train and validation sets
         indices = list(range(num_samples))
@@ -146,7 +147,6 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         torch.save(save, augmented_path)
 
     def train_eval_test_save(self, epoch: int = 1):
-        assert self.train_eval_ratio > 0
         save_best = True if self.save_path else False
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
                                     weight_decay=self.weight_decay)
