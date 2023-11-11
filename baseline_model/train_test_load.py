@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 from torch.nn import Module
+from torch.utils.data import Dataset
 
 from dataset import dataset
 from model import model_selector
@@ -30,7 +31,8 @@ if __name__ == '__main__':
 
     # initialize scenario
     model: Module = model_selector.get_default_resnet(layers=args.layers)
-    train_set, test_set = dataset.get_random_cifar10_dataset(args.load_data)
+    train_set: Dataset = dataset.get_random_cifar10_dataset(True, args.load_data)
+    test_set: Dataset = dataset.get_random_cifar10_dataset(False, args.load_data)
     scenario: BaseTrainTestScenario = TrainTestScenario(load_path=args.load_path,
                                                         save_path=args.save_path,
                                                         batch_size=args.batch_size,
