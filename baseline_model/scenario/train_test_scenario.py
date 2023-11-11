@@ -20,6 +20,7 @@ def test(model: Module, device_name: str, data_loader: DataLoader, criterion: _L
     with torch.no_grad():
         for batch_idx, (inputs, targets) in progress_bar:
             inputs, targets = inputs.to(device_name), targets.to(device_name)
+            inputs.requires_grad = True
             outputs = model(inputs)
             loss = criterion(outputs, targets)
 

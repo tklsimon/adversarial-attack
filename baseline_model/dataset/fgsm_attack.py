@@ -2,12 +2,6 @@ import torch
 from torch import Tensor
 
 
-# def fgsm_attack_batch(data: Tensor, epsilon: float, batch_size: int):
-#     for t in data:
-#         a = batch_size(t, epsilon)
-#     return perturbed_image
-
-
 def fgsm_attack(data: Tensor, epsilon: float) -> Tensor:
     # Restore the data to its original scale
     image = denorm(data)
@@ -22,7 +16,7 @@ def fgsm_attack(data: Tensor, epsilon: float) -> Tensor:
 
 
 # restores the tensors to their original scale
-def denorm(batch, mean=[0.1307], std=[0.3081], device: str = 'cuda') -> Tensor:
+def denorm(batch, mean=[0.1307], std=[0.3081]) -> Tensor:
     """
     Convert a batch of tensors to their original scale.
 
@@ -33,11 +27,20 @@ def denorm(batch, mean=[0.1307], std=[0.3081], device: str = 'cuda') -> Tensor:
 
     Returns:
         torch.Tensor: batch of tensors without normalization applied to them.
-        :param device: cuda or cpu
     """
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     if isinstance(mean, list):
         mean = torch.tensor(mean).to(device)
     if isinstance(std, list):
         std = torch.tensor(std).to(device)
 
     return batch * std.view(1, -1, 1, 1) + mean.view(1, -1, 1, 1)
+
+
+class FgsmTransform(torch.nn.Module):
+    def __init__(self, epsilon: float = 0.07, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.epsilon = epsilon
+
+    def forward(self, img):
+        return fgsm_attack(img, self.epsilon)
