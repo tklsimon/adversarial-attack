@@ -41,9 +41,14 @@ if __name__ == '__main__':
                                                         model=model,
                                                         train_set=train_set,
                                                         test_set=test_set)
+    print("*** arguments: ***")
     print(args)
+    print("*** scenario: ***")
+    print(scenario)
+    print()
 
-    if args.test_only:
-        scenario.train_eval_test_save(0)
-    else:
-        scenario.train_eval_test_save(args.train_epochs)
+    if not args.dry_run:
+        if args.test_only:
+            scenario.train_eval_test_save(0)
+        else:
+            scenario.train_eval_test_save(args.train_epochs)
