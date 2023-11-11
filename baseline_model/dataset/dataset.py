@@ -2,6 +2,8 @@ import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10
 
+from .fgsm_attack import FgsmTransform
+
 
 def get_default_cifar10_dataset(is_train: bool, download: bool = False) -> Dataset:
     transform = transforms.Compose([
@@ -26,3 +28,12 @@ def get_random_cifar10_dataset(is_train: bool, download: bool = False) -> Datase
         transforms.ToTensor()
     ])
     return CIFAR10(root='./data', train=is_train, download=download, transform=transform)
+
+
+def get_fgsm_cifar10_dataset(is_train: bool, download: bool = False) -> Dataset:
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        FgsmTransform(0.7)
+    ])
+    return CIFAR10(root='./data', train=is_train, download=download, transform=transform)
+
