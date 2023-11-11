@@ -1,5 +1,4 @@
 from torch import nn
-from torch.utils import model_zoo
 from torchvision.models import resnet18, ResNet18_Weights, ResNet50_Weights, resnet50, ResNet101_Weights, resnet101, \
     resnet152, ResNet152_Weights, ResNet34_Weights, resnet34
 
@@ -23,7 +22,8 @@ def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool =
     if layers == 152:
         weights = ResNet152_Weights.DEFAULT if pretrain else None
         net = resnet152(weights=weights)
-    net.fc = nn.Linear(512, num_classes)
+    in_ftr = net.fc.in_features  # input dimension of default output layer
+    net.fc = nn.Linear(in_ftr, num_classes, bias=True)  # modify output dimension
     return net
 
 

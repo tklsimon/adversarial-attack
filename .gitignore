@@ -1,4 +1,4 @@
 /.idea/**
-/baseline-model/data/**
-/baseline-model/checkpoint/**
+/baseline_model/data/**
+/baseline_model/checkpoint/**
 /.ipynb_checkpoints

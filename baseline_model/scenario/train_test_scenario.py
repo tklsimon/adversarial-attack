@@ -12,8 +12,8 @@ from .base_train_test_scenario import BaseTrainTestScenario
 
 
 def test(model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
-    model.eval()
-    test_loss = 0
+    model.eval()  # switch to evaluation mode
+    loss_value = 0
     correct = 0
     total = 0
     progress_bar = tqdm(enumerate(data_loader), total=len(data_loader))
@@ -23,16 +23,26 @@ def test(model: Module, device_name: str, data_loader: DataLoader, criterion: _L
             outputs = model(inputs)
             loss = criterion(outputs, targets)
 
-            test_loss += loss.item()
+            loss_value += loss.item()
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
             log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                test_loss / (batch_idx + 1), 100. * correct / total, correct, total
+                loss_value / (batch_idx + 1), 100. * correct / total, correct, total
             )
             progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
-    return test_loss / len(data_loader)
+    return loss_value / len(data_loader)
+
+
+def save(state_dict: dict, save_path: str, train_param: str):
+    print('==> Save to checkpoint..', save_path)
+    augmented_path = os.path.join("./checkpoint", save_path)
+    checkpoint_dir: str = os.path.dirname(augmented_path)
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+    data = {'state_dict': state_dict, 'param_dict': train_param}
+    torch.save(data, augmented_path)
 
 
 class TrainTestScenario(BaseTrainTestScenario, ABC):
@@ -50,11 +60,12 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         self._init_model()
 
     def __str__(self):
-        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, train_eval_ratio=%.2E" % (
-            self.model.__class__.__name__,
-            self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-            self.train_eval_ratio
-        )
+        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
+               "train_eval_ratio=%.2E" % (
+                   self.model.__class__.__name__,
+                   self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
+                   self.train_eval_ratio
+               )
 
     def _init_data(self):
         print('==> Preparing data..')
@@ -90,7 +101,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
             self.model = torch.nn.DataParallel(self.model)
             torch.backends.cudnn.benchmark = True
         if self.load_path:
-            print('==> Resuming from checkpoint..')
+            print('==> Resuming from checkpoint ', self.load_path)
             augmented_path = os.path.join("./checkpoint", self.load_path)
             checkpoint_dir: str = os.path.dirname(augmented_path)
             if not os.path.exists(checkpoint_dir):
@@ -98,7 +109,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
             checkpoint = torch.load(augmented_path)
             self.model.load_state_dict(checkpoint['state_dict'])
             if 'param_dict' in checkpoint:
-                print("loaded model: ", checkpoint['param_dict'])
+                print("==> Loaded model: ", checkpoint['param_dict'])
 
     def train(self, epoch: int = 1):
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
@@ -139,15 +150,6 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
             scheduler.step()
 
-    def save(self):
-        print('==> Save to checkpoint..')
-        augmented_path = os.path.join("./checkpoint", self.save_path)
-        checkpoint_dir: str = os.path.dirname(augmented_path)
-        if not os.path.exists(checkpoint_dir):
-            os.makedirs(checkpoint_dir)
-        save = {'state_dict': self.model.state_dict()}
-        torch.save(save, augmented_path)
-
     def train_eval_test_save(self, epoch: int = 1):
         save_best = True if self.save_path else False
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
@@ -157,9 +159,9 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         criterion = torch.nn.CrossEntropyLoss()
 
         best_val_score = 0
-        best_model_param_dict = None
+        best_model_state_dict: dict = dict()
         for i in range(epoch):
-            print('==> Train Epoch: %d..' % i)
+            print('==> Train Epoch: %d..' % (i + i))
 
             """train"""
             self.model.train()  # switch to train mode
@@ -197,7 +199,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
             if save_best:
                 if 100. * correct / total > best_val_score:
                     best_val_score = 100. * correct / total
-                    best_model_param_dict = self.model.state_dict()
+                    best_model_state_dict = self.model.state_dict()
 
         """test"""
         print('==> Test')
@@ -205,12 +207,6 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
         """save"""
         if save_best:
-            print('==> Save to checkpoint..')
-            augmented_path = os.path.join("./checkpoint", self.save_path)
-            checkpoint_dir: str = os.path.dirname(augmented_path)
-            if not os.path.exists(checkpoint_dir):
-                os.makedirs(checkpoint_dir)
-            save = {'state_dict': best_model_param_dict, 'param_dict': str(self)}
-            torch.save(save, augmented_path)
+            save(best_model_state_dict, self.save_path, str(self))
 
         torch.cuda.empty_cache()
