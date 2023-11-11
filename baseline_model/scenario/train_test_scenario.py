@@ -161,7 +161,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         best_val_score = 0
         best_model_state_dict: dict = dict()
         for i in range(epoch):
-            print('==> Train Epoch: %d..' % (i + i))
+            print('==> Train Epoch: %d..' % i)
 
             """train"""
             self.model.train()  # switch to train mode
