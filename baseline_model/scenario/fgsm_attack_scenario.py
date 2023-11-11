@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
 from .train_test_scenario import TrainTestScenario
-from ..dataset.fgsm_attack import fgsm_attack
+from baseline_model.dataset.fgsm_attack import fgsm_attack
 
 
 class FgsmAttackScenario(TrainTestScenario):
