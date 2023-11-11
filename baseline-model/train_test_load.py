@@ -23,12 +23,13 @@ if __name__ == '__main__':
     # model parameter
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
+    parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
     args = parser.parse_args()
 
     print("*** train-test-load script ***")
 
     # initialize scenario
-    model: Module = model_selector.get_default_resnet(layers=152)
+    model: Module = model_selector.get_default_resnet(layers=args.layers)
     train_set, test_set = dataset.get_random_cifar10_dataset(args.load_data)
     scenario: BaseTrainTestScenario = TrainTestScenario(load_path=args.load_path,
                                                         save_path=args.save_path,
@@ -40,7 +41,7 @@ if __name__ == '__main__':
                                                         model=model,
                                                         train_set=train_set,
                                                         test_set=test_set)
-    print(scenario)
+    print(args)
 
     if args.test_only:
         scenario.train_eval_test_save(0)
