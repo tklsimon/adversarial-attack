@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from .base_train_test_scenario import BaseTrainTestScenario
 
+
 class TrainTestScenario(BaseTrainTestScenario, ABC):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
