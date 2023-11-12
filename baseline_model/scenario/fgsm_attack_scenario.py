@@ -67,15 +67,15 @@ class FgsmAttackScenario(TrainTestScenario):
         return loss_value / len(data_loader)
 
 
-def fgsm_attack(image, epsilon):
+def fgsm_attack(inputs: Tensor, epsilon: float) -> Tensor:
     # Collect ``datagrad``
-    data_grad = image.grad.data
+    data_grad = inputs.grad.data
     # Collect the element-wise sign of the data gradient
     sign_data_grad = data_grad.sign()
     # Create the perturbed image by adjusting each pixel of the input image
-    perturbed_image = image + epsilon * sign_data_grad
+    perturbed_input = inputs + epsilon * sign_data_grad
     # Adding clipping to maintain [0,1] range
-    perturbed_image = torch.clamp(perturbed_image, 0, 1)
+    perturbed_input = torch.clamp(perturbed_input, 0, 1)
     # Return the perturbed image
-    return perturbed_image
+    return perturbed_input
 
