@@ -1,3 +1,5 @@
+import os
+import sys
 from argparse import ArgumentParser
 
 from torch.nn import Module
@@ -5,8 +7,12 @@ from torch.utils.data import Dataset
 
 from dataset import dataset
 from model import model_selector
-from scenario.base_train_test_scenario import BaseTrainTestScenario
-from scenario.fgsm_attack_scenario import FgsmAttackScenario
+
+par_dir: str = os.path.dirname(os.getcwd())
+sys.path.append(par_dir)
+
+from scenario.base_train_test_scenario import BaseTrainTestScenario  # noqa
+from scenario.fgsm_attack_scenario import FgsmAttackScenario  # noqa
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='FGSM Attack Test')
