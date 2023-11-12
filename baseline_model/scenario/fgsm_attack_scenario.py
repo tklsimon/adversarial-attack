@@ -45,7 +45,7 @@ class FgsmAttackScenario(TrainTestScenario):
             loss = F.nll_loss(output, targets)
 
             # Zero all existing gradients
-            # model.zero_grad()
+            model.zero_grad()
 
             # Calculate gradients of model in backward pass
             loss.backward()
