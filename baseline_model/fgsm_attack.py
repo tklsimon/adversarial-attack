@@ -31,6 +31,8 @@ if __name__ == '__main__':
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
+    # attack parameter
+    parser.add_argument('--epsilon', default=0.007, type=float, help='FGSM noise attack epsilon')
     args = parser.parse_args()
 
     print("*** fgsm attack script ***")
@@ -46,6 +48,7 @@ if __name__ == '__main__':
                                                          momentum=args.momentum,
                                                          weight_decay=args.weight_decay,
                                                          train_eval_ratio=args.train_eval_ratio,
+                                                         epsilon=args.epsilon,
                                                          model=model,
                                                          train_set=train_set,
                                                          test_set=test_set)
