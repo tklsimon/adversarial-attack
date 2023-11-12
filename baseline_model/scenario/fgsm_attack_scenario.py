@@ -4,13 +4,10 @@ from torch import Tensor
 from torch.nn import Module
 from torch.nn.modules.loss import _Loss
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 from tqdm import tqdm
 
 from .train_test_scenario import TrainTestScenario
 
-
-# from baseline_model.dataset.fgsm_attack import fgsm_attack
 
 class FgsmAttackScenario(TrainTestScenario):
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
@@ -78,4 +75,3 @@ def fgsm_attack(inputs: Tensor, epsilon: float) -> Tensor:
     perturbed_input = torch.clamp(perturbed_input, 0, 1)
     # Return the perturbed image
     return perturbed_input
-
