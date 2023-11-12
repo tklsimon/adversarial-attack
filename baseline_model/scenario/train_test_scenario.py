@@ -11,40 +11,6 @@ from tqdm import tqdm
 from .base_train_test_scenario import BaseTrainTestScenario
 
 
-def test(model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
-    model.eval()  # switch to evaluation mode
-    loss_value = 0
-    correct = 0
-    total = 0
-    progress_bar = tqdm(enumerate(data_loader), total=len(data_loader))
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in progress_bar:
-            inputs, targets = inputs.to(device_name), targets.to(device_name)
-            outputs = model(inputs)
-            loss = criterion(outputs, targets)
-
-            loss_value += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
-
-            log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                loss_value / (batch_idx + 1), 100. * correct / total, correct, total
-            )
-            progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
-    return loss_value / len(data_loader)
-
-
-def save(state_dict: dict, save_path: str, train_param: str):
-    print('==> Save to checkpoint..', save_path)
-    augmented_path = os.path.join("./checkpoint", save_path)
-    checkpoint_dir: str = os.path.dirname(augmented_path)
-    if not os.path.exists(checkpoint_dir):
-        os.makedirs(checkpoint_dir)
-    data = {'state_dict': state_dict, 'param_dict': train_param}
-    torch.save(data, augmented_path)
-
-
 class TrainTestScenario(BaseTrainTestScenario, ABC):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
@@ -74,7 +40,6 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         # Calculate the number of samples for each split
         num_samples = len(self.train_set)
         train_size = int(self.train_eval_ratio * num_samples)
-        assert self.train_eval_ratio < 1
 
         # Create indices for train and validation sets
         indices = list(range(num_samples))
@@ -87,11 +52,14 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
         # split into validation and train set
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
-        self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
         self.test_loader = DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
+        if self.train_eval_ratio < 1:
+            self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
+        else:
+            self.validation_loader = None
         print("target class available: ", self.classes)
-        print("no. of train batch: ", len(self.train_loader))
-        print("no. of validation batch: ", len(self.validation_loader))
+        print("no. of train batch: ", len(train_indices))
+        print("no. of validation batch: ", len(val_indices))
         print("no. of test batch: ", len(self.test_loader))
 
     def _init_model(self):
@@ -150,6 +118,38 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
             scheduler.step()
 
+    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
+        model.eval()  # switch to evaluation mode
+        loss_value = 0
+        correct = 0
+        total = 0
+        progress_bar = tqdm(enumerate(data_loader), total=len(data_loader))
+        with torch.no_grad():
+            for batch_idx, (inputs, targets) in progress_bar:
+                inputs, targets = inputs.to(device_name), targets.to(device_name)
+                outputs = model(inputs)
+                loss = criterion(outputs, targets)
+
+                loss_value += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+
+                log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
+                    loss_value / (batch_idx + 1), 100. * correct / total, correct, total
+                )
+                progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
+        return loss_value / len(data_loader)
+
+    def save(self, state_dict: dict, save_path: str, train_param: str):
+        print('==> Save to checkpoint..', save_path)
+        augmented_path = os.path.join("./checkpoint", save_path)
+        checkpoint_dir: str = os.path.dirname(augmented_path)
+        if not os.path.exists(checkpoint_dir):
+            os.makedirs(checkpoint_dir)
+        data = {'state_dict': state_dict, 'param_dict': train_param}
+        torch.save(data, augmented_path)
+
     def train_eval_test_save(self, epoch: int = 1):
         save_best = True if self.save_path else False
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
@@ -161,7 +161,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         best_val_score = 0
         best_model_state_dict: dict = dict()
         for i in range(epoch):
-            print('==> Train Epoch: %d..' % (i + i))
+            print('==> Train Epoch: %d..' % i)
 
             """train"""
             self.model.train()  # switch to train mode
@@ -190,10 +190,12 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
                 )
 
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
+                break
 
             """evaluation"""
-            eval_loss: float = test(self.model, self.device_name, self.validation_loader, criterion)
-            # scheduler.step(eval_loss))
+            if self.validation_loader is not None and len(self.validation_loader) > 0:
+                eval_loss: float = self.test(self.model, self.device_name, self.validation_loader, criterion)
+                # scheduler.step(eval_loss))
             scheduler.step()
 
             if save_best:
@@ -203,10 +205,10 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
         """test"""
         print('==> Test')
-        test_loss = test(self.model, self.device_name, self.test_loader, criterion)
+        test_loss = self.test(self.model, self.device_name, self.test_loader, criterion)
 
         """save"""
         if save_best:
-            save(best_model_state_dict, self.save_path, str(self))
+            self.save(best_model_state_dict, self.save_path, str(self))
 
         torch.cuda.empty_cache()
