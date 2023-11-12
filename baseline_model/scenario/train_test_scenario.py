@@ -40,7 +40,6 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         # Calculate the number of samples for each split
         num_samples = len(self.train_set)
         train_size = int(self.train_eval_ratio * num_samples)
-        assert self.train_eval_ratio < 1
 
         # Create indices for train and validation sets
         indices = list(range(num_samples))
@@ -53,11 +52,14 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
         # split into validation and train set
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
-        self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
         self.test_loader = DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
+        if self.train_eval_ratio < 1:
+            self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
+        else:
+            self.validation_loader = None
         print("target class available: ", self.classes)
-        print("no. of train batch: ", len(self.train_loader))
-        print("no. of validation batch: ", len(self.validation_loader))
+        print("no. of train batch: ", len(train_indices))
+        print("no. of validation batch: ", len(val_indices))
         print("no. of test batch: ", len(self.test_loader))
 
     def _init_model(self):
@@ -188,10 +190,12 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
                 )
 
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
+                break
 
             """evaluation"""
-            eval_loss: float = self.test(self.model, self.device_name, self.validation_loader, criterion)
-            # scheduler.step(eval_loss))
+            if self.validation_loader is not None and len(self.validation_loader) > 0:
+                eval_loss: float = self.test(self.model, self.device_name, self.validation_loader, criterion)
+                # scheduler.step(eval_loss))
             scheduler.step()
 
             if save_best:
