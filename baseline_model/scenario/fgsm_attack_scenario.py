@@ -8,8 +8,9 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from .train_test_scenario import TrainTestScenario
-# from baseline_model.dataset.fgsm_attack import fgsm_attack
 
+
+# from baseline_model.dataset.fgsm_attack import fgsm_attack
 
 class FgsmAttackScenario(TrainTestScenario):
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
@@ -30,7 +31,6 @@ class FgsmAttackScenario(TrainTestScenario):
         progress_bar = tqdm(enumerate(data_loader), total=len(data_loader))
         # Loop over all examples in test set
         for batch_idx, (inputs, targets) in progress_bar:
-
             # Send the data and label to the device
             inputs = inputs.to(device_name)
             targets = targets.to(device_name)
@@ -40,32 +40,18 @@ class FgsmAttackScenario(TrainTestScenario):
 
             # Forward pass the data through the model
             output = model(inputs)
-        #     init_pred = output.max(1, keepdim=True)[1]  # get the index of the max log-probability
-        #
-        #     # If the initial prediction is wrong, don't bother attacking, just move on
-        #     if init_pred.item() != target.item():
-        #         continue
-        #
+
             # Calculate the loss
             loss = F.nll_loss(output, targets)
-        #
-        #     # Zero all existing gradients
-        #     model.zero_grad()
-        #
+
+            # Zero all existing gradients
+            # model.zero_grad()
+
             # Calculate gradients of model in backward pass
             loss.backward()
 
-            # Collect ``datagrad``
-            data_grad = inputs.grad.data
-
-            # Restore the data to its original scale
-            data_denorm = denorm(inputs)
-
-            # Call FGSM Attack
-            perturbed_inputs = fgsm_attack(data_denorm, epsilon, data_grad)
-
-            # Reapply normalization
-            perturbed_inputs_normalized = transforms.Normalize((0.1307,), (0.3081,))(perturbed_inputs)
+            # get FGSM noise inputs
+            perturbed_inputs_normalized = get_fgsm_input(inputs, self.epsilon)
 
             # Re-classify the perturbed image
             outputs = model(perturbed_inputs_normalized)
@@ -79,28 +65,6 @@ class FgsmAttackScenario(TrainTestScenario):
                 loss_value / (batch_idx + 1), 100. * correct / total, correct, total
             )
             progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
-
-        #
-        #     # Check for success
-        #     final_pred = output.max(1, keepdim=True)[1]  # get the index of the max log-probability
-        #     if final_pred.item() == target.item():
-        #         correct += 1
-        #         # Special case for saving 0 epsilon examples
-        #         if epsilon == 0 and len(adv_examples) < 5:
-        #             adv_ex = perturbed_data.squeeze().detach().cpu().numpy()
-        #             adv_examples.append((init_pred.item(), final_pred.item(), adv_ex))
-        #     else:
-        #         # Save some adv examples for visualization later
-        #         if len(adv_examples) < 5:
-        #             adv_ex = perturbed_data.squeeze().detach().cpu().numpy()
-        #             adv_examples.append((init_pred.item(), final_pred.item(), adv_ex))
-        #
-        # # Calculate final accuracy for this epsilon
-        # final_acc = correct / float(len(data_loader))
-        # print(f"Epsilon: {epsilon}\tTest Accuracy = {correct} / {len(data_loader)} = {final_acc}")
-        #
-        # # Return the accuracy and an adversarial example
-        # return final_acc
         return loss_value / len(data_loader)
 
 
@@ -131,8 +95,24 @@ def fgsm_attack(image, epsilon, data_grad):
     # Collect the element-wise sign of the data gradient
     sign_data_grad = data_grad.sign()
     # Create the perturbed image by adjusting each pixel of the input image
-    perturbed_image = image + epsilon*sign_data_grad
+    perturbed_image = image + epsilon * sign_data_grad
     # Adding clipping to maintain [0,1] range
     perturbed_image = torch.clamp(perturbed_image, 0, 1)
     # Return the perturbed image
     return perturbed_image
+
+
+def get_fgsm_input(inputs: Tensor, epsilon: float):
+    # Collect ``datagrad``
+    data_grad = inputs.grad.data
+
+    # Restore the data to its original scale
+    data_denorm = denorm(inputs)
+
+    # Call FGSM Attack
+    perturbed_inputs = fgsm_attack(data_denorm, epsilon, data_grad)
+
+    # Reapply normalization
+    perturbed_inputs_normalized = transforms.Normalize((0.1307,), (0.3081,))(perturbed_inputs)
+
+    return perturbed_inputs_normalized
