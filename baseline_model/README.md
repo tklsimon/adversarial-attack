@@ -22,6 +22,9 @@ there are several modules organized as below:
 
 Script (Top Level)
 
+- train_test_load.py
+- fgsm_attack.py
+
 Submodules:
 
 - scenario: a generalized script which done the data initialization, model parameter loading and exact procedure.
