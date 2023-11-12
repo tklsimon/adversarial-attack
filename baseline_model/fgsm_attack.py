@@ -31,6 +31,8 @@ if __name__ == '__main__':
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
+    parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
+    parser.add_argument('--model_type', default='', type=str, help='custom or default model')
     # attack parameter
     parser.add_argument('--epsilon', default=0.007, type=float, help='FGSM noise attack epsilon')
     args = parser.parse_args()
@@ -38,7 +40,10 @@ if __name__ == '__main__':
     print("*** fgsm attack script ***")
 
     # initialize scenario
-    model: Module = model_selector.get_default_resnet(layers=args.layers)
+    if args.model_type == 'custom':
+        model: Module = model_selector.get_custom_resnet(layers=args.layers)
+    else:
+        model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
     train_set: Dataset = dataset.get_random_cifar10_dataset(True, download=args.load_data)
     test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=args.load_data)
     scenario: BaseTrainTestScenario = FgsmAttackScenario(load_path=args.load_path,
