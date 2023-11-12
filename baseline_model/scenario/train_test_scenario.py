@@ -79,28 +79,27 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
             if 'param_dict' in checkpoint:
                 print("==> Loaded model: ", checkpoint['param_dict'])
 
-    def train(self, epoch: int = 1):
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
-                                    weight_decay=self.weight_decay)
-        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, total_steps=len(self.train_loader),
-                                                        epochs=epoch)
-        criterion = torch.nn.CrossEntropyLoss()
-
+    def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
+              optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
+        best_val_score = 0
+        best_model_state_dict: dict = dict()
         for i in range(epoch):
             print('==> Train Epoch: %d..' % i)
 
-            self.model.train()
+            """train"""
+            model.train()  # switch to train mode
             train_loss = 0
             correct = 0
             total = 0
 
-            progress_bar = tqdm(enumerate(self.train_loader), total=len(self.train_loader))
+            """evaluation"""
+            progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
 
             for batch_idx, (inputs, targets) in progress_bar:
-                inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
+                inputs, targets = inputs.to(device_name), targets.to(device_name)
 
                 optimizer.zero_grad()
-                outputs = self.model(inputs)
+                outputs = model(inputs)
                 loss = criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()
@@ -116,7 +115,20 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
 
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
+            """evaluation"""
+            if self.validation_loader is not None and len(validation_loader) > 0:
+                eval_loss: float = self.test(model, device_name, validation_loader, criterion)
+                # scheduler.step(eval_loss))
             scheduler.step()
+
+            if save_best:
+                if 100. * correct / total > best_val_score:
+                    best_val_score = 100. * correct / total
+                    best_model_state_dict = model.state_dict()
+
+        """save"""
+        if save_best:
+            self.save(best_model_state_dict, self.save_path, str(self))
 
     def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
         model.eval()  # switch to evaluation mode
@@ -158,57 +170,11 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
                                                         epochs=epoch)
         criterion = torch.nn.CrossEntropyLoss()
 
-        best_val_score = 0
-        best_model_state_dict: dict = dict()
-        for i in range(epoch):
-            print('==> Train Epoch: %d..' % i)
-
-            """train"""
-            self.model.train()  # switch to train mode
-            train_loss = 0
-            correct = 0
-            total = 0
-
-            progress_bar = tqdm(enumerate(self.train_loader), total=len(self.train_loader))
-
-            for batch_idx, (inputs, targets) in progress_bar:
-                inputs, targets = inputs.to(self.device_name), targets.to(self.device_name)
-
-                optimizer.zero_grad()
-                outputs = self.model(inputs)
-                loss = criterion(outputs, targets)
-                loss.backward()
-                optimizer.step()
-
-                train_loss += loss.item()
-                _, predicted = outputs.max(1)
-                total += targets.size(0)
-                correct += predicted.eq(targets).sum().item()
-
-                log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                    train_loss / (batch_idx + 1), 100. * correct / total, correct, total
-                )
-
-                progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
-                break
-
-            """evaluation"""
-            if self.validation_loader is not None and len(self.validation_loader) > 0:
-                eval_loss: float = self.test(self.model, self.device_name, self.validation_loader, criterion)
-                # scheduler.step(eval_loss))
-            scheduler.step()
-
-            if save_best:
-                if 100. * correct / total > best_val_score:
-                    best_val_score = 100. * correct / total
-                    best_model_state_dict = self.model.state_dict()
-
+        """train, evaluate and save best model"""
+        self.train(self.model, self.device_name, self.train_loader, self.validation_loader, optimizer, scheduler,
+                   criterion, save_best, epoch)
         """test"""
         print('==> Test')
         test_loss = self.test(self.model, self.device_name, self.test_loader, criterion)
-
-        """save"""
-        if save_best:
-            self.save(best_model_state_dict, self.save_path, str(self))
 
         torch.cuda.empty_cache()
