@@ -22,7 +22,6 @@ class FgsmAttackScenario(TrainTestScenario):
         self.epsilon = epsilon
 
     def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
-        epsilon = self.epsilon
         model.eval()  # switch to evaluation mode
         loss_value = 0
         correct = 0
@@ -51,7 +50,7 @@ class FgsmAttackScenario(TrainTestScenario):
             loss.backward()
 
             # get FGSM noise inputs
-            perturbed_inputs_normalized = get_fgsm_input(inputs, self.epsilon)
+            perturbed_inputs_normalized = fgsm_attack(inputs, self.epsilon)
 
             # Re-classify the perturbed image
             outputs = model(perturbed_inputs_normalized)
@@ -68,30 +67,9 @@ class FgsmAttackScenario(TrainTestScenario):
         return loss_value / len(data_loader)
 
 
-# restores the tensors to their original scale
-def denorm(batch, mean=[0.1307], std=[0.3081]) -> Tensor:
-    """
-    Convert a batch of tensors to their original scale.
-
-    Args:
-        batch (torch.Tensor): Batch of normalized tensors.
-        mean (torch.Tensor or list): Mean used for normalization.
-        std (torch.Tensor or list): Standard deviation used for normalization.
-
-    Returns:
-        torch.Tensor: batch of tensors without normalization applied to them.
-    """
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    if isinstance(mean, list):
-        mean = torch.tensor(mean).to(device)
-    if isinstance(std, list):
-        std = torch.tensor(std).to(device)
-
-    return batch * std.view(1, -1, 1, 1) + mean.view(1, -1, 1, 1)
-
-
-# FGSM attack code
-def fgsm_attack(image, epsilon, data_grad):
+def fgsm_attack(image, epsilon):
+    # Collect ``datagrad``
+    data_grad = image.grad.data
     # Collect the element-wise sign of the data gradient
     sign_data_grad = data_grad.sign()
     # Create the perturbed image by adjusting each pixel of the input image
@@ -101,18 +79,3 @@ def fgsm_attack(image, epsilon, data_grad):
     # Return the perturbed image
     return perturbed_image
 
-
-def get_fgsm_input(inputs: Tensor, epsilon: float):
-    # Collect ``datagrad``
-    data_grad = inputs.grad.data
-
-    # Restore the data to its original scale
-    data_denorm = denorm(inputs)
-
-    # Call FGSM Attack
-    perturbed_inputs = fgsm_attack(data_denorm, epsilon, data_grad)
-
-    # Reapply normalization
-    perturbed_inputs_normalized = transforms.Normalize((0.1307,), (0.3081,))(perturbed_inputs)
-
-    return perturbed_inputs_normalized
