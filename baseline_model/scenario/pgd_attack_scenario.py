@@ -4,7 +4,6 @@ from torch import nn, Tensor
 from torch.nn import Module
 from torch.nn.modules.loss import _Loss
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 from tqdm import tqdm
 
 from .train_test_scenario import TrainTestScenario
@@ -51,10 +50,11 @@ class PgdAttackScenario(TrainTestScenario):
             loss.backward()
 
             # get PGD noise inputs
-            perturbed_inputs_normalized = pgd_attack(inputs,  self.epsilon, self.alpha, self.num_iter)
+            perturbed_inputs = pgd_attack(inputs, targets, self.model, self.epsilon, self.alpha,
+                                                     self.num_iter)
 
             # Re-classify the perturbed image
-            outputs = model(perturbed_inputs_normalized)
+            outputs = model(perturbed_inputs)
 
             loss_value += loss.item()
             _, predicted = outputs.max(1)
@@ -68,27 +68,27 @@ class PgdAttackScenario(TrainTestScenario):
         return loss_value / len(data_loader)
 
 
-def pgd_attack(inputs: Tensor, epsilon: float, alpha:float , num_iter:int) -> Tensor:
-    #Set up loss for iteration maximising loss
+def pgd_attack(inputs: Tensor, targets, model: Module, epsilon: float, alpha: float, num_iter: int) -> Tensor:
+    # Set up loss for iteration maximising loss
     criterion = nn.CrossEntropyLoss()
-    #Copying tensor from original for operation
+    # Copying tensor from original for operation
     perturbing_input = inputs.clone().detach()
 
-    for i in range(self.num_iter): #default epsilon: float = 0.03, alpha: float = 0.007, num_iter: int = 10
-        #enable grad computation
+    for i in range(num_iter):  # default epsilon: float = 0.03, alpha: float = 0.007, num_iter: int = 10
+        # enable grad computation
         perturbing_input.requires_grad = True
-        #makes prediction on perturbing images
-        outputs = self.model(perturbing_input)
-        #clear model grad before computing
-        self.model.zero_grad()
-        #Calculate loss
+        # makes prediction on perturbing images
+        outputs = model(perturbing_input)
+        # clear model grad before computing
+        model.zero_grad()
+        # Calculate loss
         loss = criterion(outputs, targets)
-        #Compute gradient
+        # Compute gradient
         loss.backward()
-        #learning rate(alpha)*neg(grad) to maximise loss
-        adv_images = perturbing_input + self.alpha * perturbing_input.grad.sign()
-        #confining perturbation
-        eta = torch.clamp(adv_images - perturbing_input.data, min=-self.epsilon, max=self.epsilon)
-        #output perturbed image for next iteration
+        # learning rate(alpha)*neg(grad) to maximise loss
+        adv_images = perturbing_input + alpha * perturbing_input.grad.sign()
+        # confining perturbation
+        eta = torch.clamp(adv_images - perturbing_input.data, min=-epsilon, max=epsilon)
+        # output perturbed image for next iteration
         perturbing_input = torch.clamp(perturbing_input.data + eta, min=0, max=1).detach()
     return perturbing_input
