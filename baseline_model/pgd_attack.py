@@ -34,9 +34,9 @@ if __name__ == '__main__':
     parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
     parser.add_argument('--model_type', default='', type=str, help='custom or default model')
     # attack parameter
-    parser.add_argument('--epsilon', default=0.03, type=float, help='FGSM noise attack epsilon')
-    parser.add_argument('--alpha', default=0.007, type=float, help='FGSM noise attack alpha')
-    parser.add_argument('--num_iter', default=10, type=int, help='FGSM noise attack alpha')
+    parser.add_argument('--epsilon', default=0.03, type=float, help='PGD noise attack epsilon')
+    parser.add_argument('--alpha', default=0.007, type=float, help='PGD noise attack alpha')
+    parser.add_argument('--num_iter', default=10, type=int, help='PGD noise attack iter')
     args = parser.parse_args()
 
     print("*** pgd attack script ***")
