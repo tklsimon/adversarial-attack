@@ -52,6 +52,9 @@ class FgsmAttackScenario(TrainTestScenario):
             # Re-classify the perturbed image
             outputs = model(perturbed_inputs_normalized)
 
+            # Recalculate the loss
+            loss = F.nll_loss(output, targets)
+
             loss_value += loss.item()
             _, predicted = outputs.max(1)
             total += targets.size(0)
