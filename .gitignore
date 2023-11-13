@@ -1,3 +1,7 @@
+/.idea/**
+/baseline_model/data/**
+/baseline_model/checkpoint/**
+
 /.idea/**/*.*
 /.idea/*.*
 /.ipynb_checkpoints
