@@ -21,6 +21,122 @@ class PgdAttackScenario(TrainTestScenario):
         self.alpha = alpha
         self.num_iter = num_iter
 
+    def __str__(self):
+        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
+               "train_eval_ratio=%.2E" % (
+                   self.model.__class__.__name__,
+                   self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
+                   self.train_eval_ratio
+               )
+
+    def _init_data(self):
+        print('==> Preparing data..')
+
+        """split into train-eval set"""
+        # Calculate the number of samples for each split
+        num_samples = len(self.train_set)
+        train_size = int(self.train_eval_ratio * num_samples)
+
+        # Create indices for train and validation sets
+        indices = list(range(num_samples))
+        train_indices = indices[:train_size]
+        val_indices = indices[train_size:]
+
+        # Create subsets for train and validation sets
+        train_dataset = Subset(self.train_set, train_indices)
+        val_dataset = Subset(self.train_set, val_indices)
+
+        # split into validation and train set
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
+        self.test_loader = DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
+        if self.train_eval_ratio < 1:
+            self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
+        else:
+            self.validation_loader = None
+        print("target class available: ", self.classes)
+        print("no. of train batch: ", len(train_indices))
+        print("no. of validation batch: ", len(val_indices))
+        print("no. of test batch: ", len(self.test_loader))
+
+    def _init_model(self):
+        print('==> Building model..')
+        self.model = self.model.to(self.device_name)
+        if self.device_name == 'cuda':
+            self.model = torch.nn.DataParallel(self.model)
+            torch.backends.cudnn.benchmark = True
+        if self.load_path:
+            print('==> Resuming from checkpoint ', self.load_path)
+            augmented_path = os.path.join("./checkpoint", self.load_path)
+            checkpoint_dir: str = os.path.dirname(augmented_path)
+            if not os.path.exists(checkpoint_dir):
+                os.makedirs(checkpoint_dir)
+            checkpoint = torch.load(augmented_path)
+            self.model.load_state_dict(checkpoint['state_dict'])
+            if 'param_dict' in checkpoint:
+                print("==> Loaded model: ", checkpoint['param_dict'])
+
+
+    def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
+              optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
+        best_val_score = 0
+        best_model_state_dict: dict = dict()
+        for i in range(epoch):
+            print('==> Train Epoch: %d..' % i)
+
+            """train"""
+            model.train()  # switch to train mode
+            train_loss = 0
+            correct = 0
+            total = 0
+
+            """evaluation"""
+            progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
+
+            for batch_idx, (inputs, targets) in progress_bar:
+                inputs, targets = inputs.to(device_name), targets.to(device_name)
+
+                optimizer.zero_grad()
+
+                if rand_num < 0.5:
+                    # 50% chance to perform PGD attack
+                    perturbed_inputs_normalized = pgd_attack(inputs, self.epsilon, self.alpha, self.num_iter)
+                    outputs = model(perturbed_inputs_normalized)
+                else:
+                    # 50% chance to just classify the original inputs
+                    outputs = model(inputs)
+
+                loss = criterion(outputs, targets)
+                loss.backward()
+                optimizer.step()
+
+                train_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+
+                log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
+                    train_loss / (batch_idx + 1), 100. * correct / total, correct, total
+                )
+
+                progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
+
+            """evaluation"""
+            if self.validation_loader is not None and len(validation_loader) > 0:
+                eval_loss: float = self.test(model, device_name, validation_loader, criterion)
+                # scheduler.step(eval_loss))
+            scheduler.step()
+
+            if save_best:
+                if 100. * correct / total > best_val_score:
+                    best_val_score = 100. * correct / total
+                    best_model_state_dict = model.state_dict()
+
+        """save"""
+        if save_best:
+            self.save(best_model_state_dict, self.save_path, str(self))
+
+
+
     def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
         model.eval()  # switch to evaluation mode
         loss_value = 0
