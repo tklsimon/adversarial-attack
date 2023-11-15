@@ -40,6 +40,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print("*** pgd attack script ***")
+    print("*** arguments: ***")
+    print(args)
+    print()
 
     # initialize scenario
     if args.model_type == 'custom':
@@ -61,11 +64,6 @@ if __name__ == '__main__':
                                             model=model,
                                             train_set=train_set,
                                             test_set=test_set)
-    print("*** arguments: ***")
-    print(args)
-    print("*** scenario: ***")
-    print(scenario)
-    print()
 
     if not args.dry_run:
         if args.test_only:
