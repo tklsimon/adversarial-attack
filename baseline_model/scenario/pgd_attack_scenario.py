@@ -103,8 +103,8 @@ class PgdAttackScenario(TrainTestScenario):
 
                 if rand_num < 0.5:
                     # 50% chance to perform PGD attack
-                    perturbed_inputs_normalized = pgd_attack(inputs, self.epsilon, self.alpha, self.num_iter)
-                    outputs = model(perturbed_inputs_normalized)
+                    perturbed_inputs = pgd_attack(inputs, self.epsilon, self.alpha, self.num_iter)
+                    outputs = model(perturbed_inputs)
                 else:
                     # 50% chance to just classify the original inputs
                     outputs = model(inputs)
