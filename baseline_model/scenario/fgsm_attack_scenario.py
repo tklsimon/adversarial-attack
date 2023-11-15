@@ -18,6 +18,14 @@ class FgsmAttackScenario(BaseScenario):
                          model=model, train_set=train_set, test_set=test_set)
         self.epsilon = epsilon
 
+    def __str__(self):
+        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
+               "train_eval_ratio=%.2E, epsilon=%d" % (
+                   self.model.__class__.__name__,
+                   self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
+                   self.train_eval_ratio, self.epsilon
+               )
+
     def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
         model.eval()  # switch to evaluation mode
         loss_value = 0

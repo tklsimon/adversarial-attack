@@ -26,57 +26,11 @@ class PgdAttackScenario(BaseScenario):
 
     def __str__(self):
         return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
-               "train_eval_ratio=%.2E" % (
+               "train_eval_ratio=%.2E, epsilon=%.2E, alpha=%.2E, num_iter=%d" % (
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.train_eval_ratio
+                   self.train_eval_ratio, self. epsilon, self.alpha, self.num_iter
                )
-
-    def _init_data(self):
-        print('==> Preparing data..')
-
-        """split into train-eval set"""
-        # Calculate the number of samples for each split
-        num_samples = len(self.train_set)
-        train_size = int(self.train_eval_ratio * num_samples)
-
-        # Create indices for train and validation sets
-        indices = list(range(num_samples))
-        train_indices = indices[:train_size]
-        val_indices = indices[train_size:]
-
-        # Create subsets for train and validation sets
-        train_dataset = Subset(self.train_set, train_indices)
-        val_dataset = Subset(self.train_set, val_indices)
-
-        # split into validation and train set
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
-        self.test_loader = DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
-        if self.train_eval_ratio < 1:
-            self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
-        else:
-            self.validation_loader = None
-        print("target class available: ", self.classes)
-        print("no. of train batch: ", len(train_indices))
-        print("no. of validation batch: ", len(val_indices))
-        print("no. of test batch: ", len(self.test_loader))
-
-    def _init_model(self):
-        print('==> Building model..')
-        self.model = self.model.to(self.device_name)
-        if self.device_name == 'cuda':
-            self.model = torch.nn.DataParallel(self.model)
-            torch.backends.cudnn.benchmark = True
-        if self.load_path:
-            print('==> Resuming from checkpoint ', self.load_path)
-            augmented_path = os.path.join("./checkpoint", self.load_path)
-            checkpoint_dir: str = os.path.dirname(augmented_path)
-            if not os.path.exists(checkpoint_dir):
-                os.makedirs(checkpoint_dir)
-            checkpoint = torch.load(augmented_path)
-            self.model.load_state_dict(checkpoint['state_dict'])
-            if 'param_dict' in checkpoint:
-                print("==> Loaded model: ", checkpoint['param_dict'])
 
     def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
