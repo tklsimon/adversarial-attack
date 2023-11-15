@@ -5,8 +5,8 @@ from torch.utils.data import Dataset
 
 from dataset import dataset
 from model import model_selector
-from scenario.base_train_test_scenario import BaseTrainTestScenario
-from scenario.train_test_scenario import TrainTestScenario
+from scenario.scenario import Scenario
+from scenario.base_scenario import BaseScenario
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='PyTorch ResNet CIFAR10 Training')
@@ -38,16 +38,16 @@ if __name__ == '__main__':
         model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
     train_set: Dataset = dataset.get_random_cifar10_dataset(True, download=args.load_data)
     test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=args.load_data)
-    scenario: BaseTrainTestScenario = TrainTestScenario(load_path=args.load_path,
-                                                        save_path=args.save_path,
-                                                        batch_size=args.batch_size,
-                                                        lr=args.lr,
-                                                        momentum=args.momentum,
-                                                        weight_decay=args.weight_decay,
-                                                        train_eval_ratio=args.train_eval_ratio,
-                                                        model=model,
-                                                        train_set=train_set,
-                                                        test_set=test_set)
+    scenario: Scenario = BaseScenario(load_path=args.load_path,
+                                      save_path=args.save_path,
+                                      batch_size=args.batch_size,
+                                      lr=args.lr,
+                                      momentum=args.momentum,
+                                      weight_decay=args.weight_decay,
+                                      train_eval_ratio=args.train_eval_ratio,
+                                      model=model,
+                                      train_set=train_set,
+                                      test_set=test_set)
     print("*** arguments: ***")
     print(args)
     print("*** scenario: ***")
@@ -56,6 +56,6 @@ if __name__ == '__main__':
 
     if not args.dry_run:
         if args.test_only:
-            scenario.train_eval_test_save(0)
+            scenario.perform(0)
         else:
-            scenario.train_eval_test_save(args.train_epochs)
+            scenario.perform(args.train_epochs)

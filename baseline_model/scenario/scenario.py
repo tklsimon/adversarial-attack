@@ -8,7 +8,7 @@ from torch.nn import Module
 from torch.utils.data import Dataset
 
 
-class BaseTrainTestScenario(ABC):
+class Scenario(ABC):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
@@ -39,6 +39,6 @@ class BaseTrainTestScenario(ABC):
     """override this method for train model"""
 
     @abstractmethod
-    def train_eval_test_save(self, epoch: int = 1):
+    def perform(self, epoch: int = 1):
         pass
 

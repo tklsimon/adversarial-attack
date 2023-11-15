@@ -8,10 +8,10 @@ from torch.utils.data import DataLoader, Subset
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from .base_train_test_scenario import BaseTrainTestScenario
+from .scenario import Scenario
 
 
-class TrainTestScenario(BaseTrainTestScenario, ABC):
+class BaseScenario(Scenario, ABC):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
@@ -162,7 +162,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         data = {'state_dict': state_dict, 'param_dict': train_param}
         torch.save(data, augmented_path)
 
-    def train_eval_test_save(self, epoch: int = 1):
+    def perform(self, epoch: int = 1):
         save_best = True if self.save_path else False
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
                                     weight_decay=self.weight_decay)

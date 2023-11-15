@@ -6,10 +6,10 @@ from torch.nn.modules.loss import _Loss
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
-from .train_test_scenario import TrainTestScenario
+from .base_scenario import BaseScenario
 
 
-class FgsmAttackScenario(TrainTestScenario):
+class FgsmAttackScenario(BaseScenario):
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.07):
