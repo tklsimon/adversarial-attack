@@ -1,9 +1,12 @@
+import os
+from random import random
+
 import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 from torch.nn import Module
 from torch.nn.modules.loss import _Loss
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
 from tqdm import tqdm
 
 from .train_test_scenario import TrainTestScenario
@@ -75,7 +78,6 @@ class PgdAttackScenario(TrainTestScenario):
             if 'param_dict' in checkpoint:
                 print("==> Loaded model: ", checkpoint['param_dict'])
 
-
     def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
         best_val_score = 0
@@ -96,6 +98,8 @@ class PgdAttackScenario(TrainTestScenario):
                 inputs, targets = inputs.to(device_name), targets.to(device_name)
 
                 optimizer.zero_grad()
+
+                rand_num = random.random()
 
                 if rand_num < 0.5:
                     # 50% chance to perform PGD attack
@@ -135,8 +139,6 @@ class PgdAttackScenario(TrainTestScenario):
         if save_best:
             self.save(best_model_state_dict, self.save_path, str(self))
 
-
-
     def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
         model.eval()  # switch to evaluation mode
         loss_value = 0
@@ -167,7 +169,7 @@ class PgdAttackScenario(TrainTestScenario):
 
             # get PGD noise inputs
             perturbed_inputs = pgd_attack(inputs, targets, self.model, self.epsilon, self.alpha,
-                                                     self.num_iter)
+                                          self.num_iter)
 
             # Re-classify the perturbed image
             outputs = model(perturbed_inputs)
