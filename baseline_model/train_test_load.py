@@ -11,10 +11,10 @@ from scenario.base_scenario import BaseScenario
 if __name__ == '__main__':
     parser = ArgumentParser(description='PyTorch ResNet CIFAR10 Training')
     # model parameters
-    parser.add_argument('--lr', default=2e-4, type=float, help='learning rate')
+    parser.add_argument('--lr', default=3e-4, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
-    parser.add_argument('--weight_decay', default=1e-6, type=float, help='weight decay')
+    parser.add_argument('--weight_decay', default=1e-5, type=float, help='weight decay')
     # train and test parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
     parser.add_argument('--train_eval_ratio', default=0.99, type=float, help='ratio for train-eval split')
