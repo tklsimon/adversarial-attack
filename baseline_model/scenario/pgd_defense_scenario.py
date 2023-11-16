@@ -22,7 +22,6 @@ class PgdDefenseScenario(PgdAttackScenario):
             correct = 0
             total = 0
 
-            """evaluation"""
             progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
 
             for batch_idx, (inputs, targets) in progress_bar:
