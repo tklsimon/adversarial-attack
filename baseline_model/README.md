@@ -40,3 +40,7 @@ There are 2 folders created and not included in source code:
 - data, the folder to store CIFAR10 data
 - checkpoint, the folder to store model checkpoints.
 
+## Documentation
+
+Follow PEP coding format
+For docstring, use [Sphinx](https://www.sphinx-doc.org/en/master/)
