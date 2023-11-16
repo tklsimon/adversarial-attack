@@ -12,10 +12,23 @@ from .scenario import Scenario
 
 
 class BaseScenario(Scenario, ABC):
-
+    """Base implementation for Scenario, only contains basic training function for a baseline model"""
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
+        """Constructor of BaseScenario
+
+        :param load_path: model weight's path under checkpoint folder
+        :param save_path: path to save trained model's weight under checkpoint folder
+        :param lr: learning rate
+        :param batch_size: batch size of processing data, use in train and test
+        :param momentum: optimizer settings
+        :param weight_decay: optimizer settings
+        :param train_eval_ratio: ratio of train dataset : evaluation dataset.  If set to 1, then all data are for training
+        :param model: model to be trained / tested
+        :param train_set: train dataset
+        :param test_set: test dataset
+        """
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
                          weight_decay=weight_decay, train_eval_ratio=train_eval_ratio,
                          model=model, train_set=train_set, test_set=test_set)
@@ -34,6 +47,7 @@ class BaseScenario(Scenario, ABC):
                )
 
     def _init_data(self):
+        """initialize data, including train-evaluation split and load dataset"""
         print('==> Preparing data..')
 
         """split into train-eval set"""
@@ -62,6 +76,7 @@ class BaseScenario(Scenario, ABC):
         print("no. of test batch: ", len(self.test_loader))
 
     def _init_model(self):
+        """initialize the model, such as loading weight"""
         print('==> Building model..')
         self.model = self.model.to(self.device_name)
         if self.device_name == 'cuda':
@@ -91,7 +106,6 @@ class BaseScenario(Scenario, ABC):
             correct = 0
             total = 0
 
-            """evaluation"""
             progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
 
             for batch_idx, (inputs, targets) in progress_bar:
@@ -153,6 +167,12 @@ class BaseScenario(Scenario, ABC):
         return loss_value / len(data_loader)
 
     def save(self, state_dict: dict, save_path: str, train_param: str):
+        """Save model
+
+        :param state_dict: the weightings of the model
+        :param save_path: where to save the model
+        :param train_param: training parameter of the model
+        """
         print('==> Save to checkpoint..', save_path)
         augmented_path = os.path.join("./checkpoint", save_path)
         checkpoint_dir: str = os.path.dirname(augmented_path)
