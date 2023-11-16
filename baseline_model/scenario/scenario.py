@@ -26,9 +26,6 @@ class Scenario(ABC):
         self.weight_decay = weight_decay
         self.train_eval_ratio = train_eval_ratio
 
-        # dataset dependent
-        self.classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-
         # train and test parameter
         self.train_set = train_set
         self.test_set = test_set

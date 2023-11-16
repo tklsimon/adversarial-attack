@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10
@@ -26,3 +28,7 @@ def get_random_cifar10_dataset(is_train: bool, download: bool = False) -> Datase
         transforms.ToTensor()
     ])
     return CIFAR10(root='./data', train=is_train, download=download, transform=transform)
+
+
+def get_cifar10_targets() -> Tuple:
+    return 'plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'

@@ -57,7 +57,6 @@ class BaseScenario(Scenario, ABC):
             self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
         else:
             self.validation_loader = None
-        print("target class available: ", self.classes)
         print("no. of train batch: ", len(train_indices))
         print("no. of validation batch: ", len(val_indices))
         print("no. of test batch: ", len(self.test_loader))
