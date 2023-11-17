@@ -1,12 +1,8 @@
-import os
-from random import random
-
 import torch
-import torch.nn.functional as F
-from torch import nn, Tensor
-from torch.nn import Module
+from torch import Tensor
+from torch.nn import Module, CrossEntropyLoss
 from torch.nn.modules.loss import _Loss
-from torch.utils.data import Dataset, DataLoader, Subset
+from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
 from .base_scenario import BaseScenario
@@ -44,6 +40,7 @@ class PgdAttackScenario(BaseScenario):
             # Send the data and label to the device
             inputs = inputs.to(device_name)
             targets = targets.to(device_name)
+            criterion = CrossEntropyLoss()
 
             # Set requires_grad attribute of tensor. Important for Attack
             inputs.requires_grad = True
@@ -52,7 +49,7 @@ class PgdAttackScenario(BaseScenario):
             output = model(inputs)
 
             # Calculate the loss
-            loss = F.nll_loss(output, targets)
+            loss = criterion(output, targets)
 
             # Zero all existing gradients
             model.zero_grad()
@@ -81,7 +78,7 @@ class PgdAttackScenario(BaseScenario):
 
 def pgd_attack(inputs: Tensor, targets, model: Module, epsilon: float, alpha: float, num_iter: int) -> Tensor:
     # Set up loss for iteration maximising loss
-    criterion = nn.CrossEntropyLoss()
+    criterion = CrossEntropyLoss()
     # Copying tensor from original for operation
     perturbing_input = inputs.clone().detach()
 

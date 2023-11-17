@@ -1,7 +1,6 @@
 import torch
-import torch.nn.functional as F
 from torch import Tensor
-from torch.nn import Module
+from torch.nn import Module, CrossEntropyLoss
 from torch.nn.modules.loss import _Loss
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
@@ -38,6 +37,7 @@ class FgsmAttackScenario(BaseScenario):
             # Send the data and label to the device
             inputs = inputs.to(device_name)
             targets = targets.to(device_name)
+            criterion = CrossEntropyLoss()
 
             # Set requires_grad attribute of tensor. Important for Attack
             inputs.requires_grad = True
@@ -46,7 +46,7 @@ class FgsmAttackScenario(BaseScenario):
             output = model(inputs)
 
             # Calculate the loss
-            loss = F.nll_loss(output, targets)
+            loss = criterion(output, targets)
 
             # Zero all existing gradients
             model.zero_grad()
@@ -61,7 +61,7 @@ class FgsmAttackScenario(BaseScenario):
             outputs = model(perturbed_inputs_normalized)
 
             # Recalculate the loss
-            loss = F.nll_loss(output, targets)
+            loss = criterion(output, targets)
 
             loss_value += loss.item()
             _, predicted = outputs.max(1)
@@ -78,10 +78,8 @@ class FgsmAttackScenario(BaseScenario):
 def fgsm_attack(inputs: Tensor, epsilon: float) -> Tensor:
     # Collect ``datagrad``
     data_grad = inputs.grad.data
-    # Collect the element-wise sign of the data gradient
-    sign_data_grad = data_grad.sign()
     # Create the perturbed image by adjusting each pixel of the input image
-    perturbed_input = inputs + epsilon * sign_data_grad
+    perturbed_input = inputs + epsilon * data_grad.sign()
     # Adding clipping to maintain [0,1] range
     perturbed_input = torch.clamp(perturbed_input, 0, 1)
     # Return the perturbed image
