@@ -4,7 +4,7 @@ from torch.nn import Module
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .pgd_attack_scenario import PgdAttackScenario, pgd_attack
+from .pgd_attack_scenario import PgdAttackScenario
 
 
 class PgdDefenseScenario(PgdAttackScenario):
@@ -33,7 +33,7 @@ class PgdDefenseScenario(PgdAttackScenario):
 
                 if rand_num < 0.5:
                     # 50% chance to perform PGD attack
-                    perturbed_inputs = pgd_attack(inputs, self.epsilon, self.alpha, self.num_iter)
+                    perturbed_inputs = self.attack(model, inputs, targets)
                     outputs = model(perturbed_inputs)
                 else:
                     # 50% chance to just classify the original inputs

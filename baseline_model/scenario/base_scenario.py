@@ -151,7 +151,8 @@ class BaseScenario(Scenario, ABC):
         progress_bar = tqdm(enumerate(data_loader), total=len(data_loader))
         with torch.no_grad():
             for batch_idx, (inputs, targets) in progress_bar:
-                inputs, targets = inputs.to(device_name), targets.to(device_name)
+                inputs = inputs.to(device_name)
+                targets = targets.to(device_name)
                 outputs = model(inputs)
                 loss = criterion(outputs, targets)
 

@@ -5,10 +5,10 @@ from torch.nn.modules.loss import _Loss
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
-from .base_scenario import BaseScenario
+from .attack_scenario import AttackScenario
 
 
-class PgdAttackScenario(BaseScenario):
+class PgdAttackScenario(AttackScenario):
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.03,
@@ -28,75 +28,42 @@ class PgdAttackScenario(BaseScenario):
                    self.train_eval_ratio, self. epsilon, self.alpha, self.num_iter
                )
 
-    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
-        model.eval()  # switch to evaluation mode
-        loss_value = 0
-        correct = 0
-        total = 0
-
-        progress_bar = tqdm(enumerate(data_loader), total=len(data_loader))
-        # Loop over all examples in test set
-        for batch_idx, (inputs, targets) in progress_bar:
-            # Send the data and label to the device
-            inputs = inputs.to(device_name)
-            targets = targets.to(device_name)
+    def attack(self, model: Module, inputs: Tensor, targets: Tensor) -> Tensor:
+        with torch.enable_grad():
+            # initialize attack settings
+            _inputs = inputs.clone().detach()
+            _targets = targets.clone().detach()
             criterion = CrossEntropyLoss()
 
-            # Set requires_grad attribute of tensor. Important for Attack
-            inputs.requires_grad = True
+            # initialize attack parameters
+            num_iter: int = self.num_iter
+            epsilon: float = self.epsilon
+            alpha: float = self.alpha
 
-            # Forward pass the data through the model
-            output = model(inputs)
+            perturbed_input = inputs.clone().detach()
+            for i in range(num_iter):
+                # enable grad for inputs
+                perturbed_input.requires_grad = True
 
-            # Calculate the loss
-            loss = criterion(output, targets)
+                # Forward pass the data through the model
+                output = model(perturbed_input)
 
-            # Zero all existing gradients
-            model.zero_grad()
+                # Calculate the loss
+                loss: Tensor = criterion(output, _targets)
 
-            # Calculate gradients of model in backward pass
-            loss.backward()
+                # Zero all existing gradients
+                model.zero_grad()
 
-            # get PGD noise inputs
-            perturbed_inputs = pgd_attack(inputs, targets, self.model, self.epsilon, self.alpha,
-                                          self.num_iter)
+                # Calculate gradients of model in backward pass
+                loss.backward()
 
-            # Re-classify the perturbed image
-            outputs = model(perturbed_inputs)
+                # Create the perturbed image by adjusting each pixel of the input image
+                perturbed_input = perturbed_input.detach() + alpha * perturbed_input.grad.sign()
+                # confining perturbation
+                eta = torch.clamp(perturbed_input - _inputs, -epsilon, epsilon)
+                # Adding clipping to maintain [0,1] range
+                perturbed_input = torch.clamp(_inputs + eta, 0, 1)
 
-            loss_value += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+            # Return the perturbed image
+            return perturbed_input.detach()
 
-            log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                loss_value / (batch_idx + 1), 100. * correct / total, correct, total
-            )
-            progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
-        return loss_value / len(data_loader)
-
-
-def pgd_attack(inputs: Tensor, targets, model: Module, epsilon: float, alpha: float, num_iter: int) -> Tensor:
-    # Set up loss for iteration maximising loss
-    criterion = CrossEntropyLoss()
-    # Copying tensor from original for operation
-    perturbing_input = inputs.clone().detach()
-
-    for i in range(num_iter):  # default epsilon: float = 0.03, alpha: float = 0.007, num_iter: int = 10
-        # enable grad computation
-        perturbing_input.requires_grad = True
-        # makes prediction on perturbing images
-        outputs = model(perturbing_input)
-        # clear model grad before computing
-        model.zero_grad()
-        # Calculate loss
-        loss = criterion(outputs, targets)
-        # Compute gradient
-        loss.backward()
-        # learning rate(alpha)*neg(grad) to maximise loss
-        adv_images = perturbing_input + alpha * perturbing_input.grad.sign()
-        # confining perturbation
-        eta = torch.clamp(adv_images - perturbing_input.data, min=-epsilon, max=epsilon)
-        # output perturbed image for next iteration
-        perturbing_input = torch.clamp(perturbing_input.data + eta, min=0, max=1).detach()
-    return perturbing_input
