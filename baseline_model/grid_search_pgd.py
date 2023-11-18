@@ -25,7 +25,6 @@ if __name__ == '__main__':
     # train and test parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
     parser.add_argument('--train_val_ratio', default=0.99, type=float, help='ratio for train-eval split')
-    parser.add_argument('--test_only', default=False, action='store_true', help='only test model')
     parser.add_argument('--dry_run', default=False, action='store_true', help='will not train or test model')
     parser.add_argument('--load_data', default=False, action='store_true', help='download data if not available')
     # model parameter
@@ -76,10 +75,7 @@ if __name__ == '__main__':
 
         test_metric: Dict = 0
         if not args.dry_run:
-            if args.test_only:
-                test_metric = scenario.perform(0)
-            else:
-                test_metric = scenario.perform(args.train_epochs)
+            test_metric = scenario.perform(0)
         grid_search_result.append((epsilon, test_metric))
 
     print("*** end result ***")
