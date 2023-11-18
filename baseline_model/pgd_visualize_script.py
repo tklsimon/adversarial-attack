@@ -1,3 +1,4 @@
+import os
 from argparse import ArgumentParser
 
 import torchvision
@@ -16,7 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
     parser.add_argument('--model_type', default='', type=str, help='custom or default model')
     parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
-    parser.add_argument('--batch_size', default=1, type=int, help='batch size')
+    parser.add_argument('--batch_size', default=4, type=int, help='batch size')
     # train and test parameters
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
     parser.add_argument('--load_data', default=False, action='store_true', help='download data if not available')
@@ -26,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--alpha', default=0.007, type=float, help='PGD noise attack alpha')
     parser.add_argument('--noise_epochs', default=10, type=int, help='no of epochs for PGD noise attack')
     # visualize parameter
-    parser.add_argument('--img_path', default=None, type=str, help='save image')
+    parser.add_argument('--img_path', default="", type=str, help='save image')
     parser.add_argument('--image_index_start', default=0, type=int, help='range of image to be generated')
     parser.add_argument('--image_index_end', default=2, type=int, help='range of image to be generated')
     args = parser.parse_args()
@@ -45,7 +46,6 @@ if __name__ == '__main__':
 
     assert args.image_index_start >= 0
     assert args.image_index_end <= len(data_set)
-    assert args.load_path is not None or args.load_path != ""
 
     subset_indices = [i for i in range(args.image_index_start, args.image_index_end + 1)]
 
@@ -53,9 +53,26 @@ if __name__ == '__main__':
 
     dataloader = DataLoader(subset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-    for (inputs, labels) in dataloader:
-        pil_image = transforms.ToPILImage()(inputs)
+    augmented_path = os.path.join("./img", args.img_path)
+    img_dir: str = os.path.dirname(augmented_path)
+    if not os.path.exists(img_dir):
+        os.makedirs(img_dir)
 
-        torchvision.utils.save_image(pil_image, 'test1.png')
-        # ori_image = transforms.sdfsdf
-        # bluerred_image: Tensor = pgd_attack(model, x, y, args.noise_epochs, args.epsilon, args.alpha)
+    for (inputs, labels) in dataloader:
+        print(labels.shape)
+        print(inputs.shape)
+
+        print()
+        print(labels[0])
+        pil_image = transforms.ToPILImage()(inputs[0])
+        pil_image.save('img/ori.jpg')
+
+        blurred_tensor: Tensor = pgd_attack(model, inputs, labels, args.noise_epochs, args.epsilon, args.alpha)
+        print(blurred_tensor.shape)
+        blurred_image = transforms.ToPILImage()(blurred_tensor[0])
+        blurred_image.save('img/blurred.jpg')
+
+        noise_tensor: Tensor = blurred_tensor[0] - inputs[0]
+        noise_tensor /= args.alpha
+        noise_image = transforms.ToPILImage()(noise_tensor)
+        noise_image.save('img/noise.jpg')
