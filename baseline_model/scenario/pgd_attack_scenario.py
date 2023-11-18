@@ -16,17 +16,16 @@ class PgdAttackScenario(AttackScenario):
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
                          weight_decay=weight_decay, train_eval_ratio=train_eval_ratio,
                          model=model, train_set=train_set, test_set=test_set)
-        self.epsilon = epsilon
-        self.alpha = alpha
-        self.num_iter = num_iter
+        self.epsilon: float = epsilon
+        self.alpha: float = alpha
+        self.num_iter: int = num_iter
 
     def __str__(self):
         return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
                "train_eval_ratio=%.2E, epsilon=%.2E, alpha=%.2E, num_iter=%d" % (
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.train_eval_ratio, self. epsilon, self.alpha, self.num_iter
-               )
+                   self.train_eval_ratio, self.epsilon, self.alpha, self.num_iter)
 
     def attack(self, model: Module, inputs: Tensor, targets: Tensor) -> Tensor:
         with torch.enable_grad():
@@ -66,4 +65,3 @@ class PgdAttackScenario(AttackScenario):
 
             # Return the perturbed image
             return perturbed_input.detach()
-

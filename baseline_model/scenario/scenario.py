@@ -5,7 +5,7 @@ https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 from abc import abstractmethod, ABC
 
 from torch.nn import Module
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 
 class Scenario(ABC):
@@ -28,24 +28,24 @@ class Scenario(ABC):
         :param test_set: test dataset
         """
         # set model
-        self.model = model
+        self.model: Module = model
 
         # model parameter
-        self.device_name = ''
-        self.load_path = load_path
-        self.save_path = save_path
-        self.batch_size = batch_size
-        self.lr = lr
-        self.momentum = momentum
-        self.weight_decay = weight_decay
-        self.train_eval_ratio = train_eval_ratio
+        self.device_name: str = ''
+        self.load_path: str = load_path
+        self.save_path: str = save_path
+        self.batch_size: int = batch_size
+        self.lr: float = lr
+        self.momentum: float = momentum
+        self.weight_decay: float = weight_decay
+        self.train_eval_ratio: float = train_eval_ratio
 
         # train and test parameter
-        self.train_set = train_set
-        self.test_set = test_set
-        self.train_loader = None
-        self.test_loader = None
-        self.validation_loader = None
+        self.train_set: Dataset = train_set
+        self.test_set: Dataset = test_set
+        self.train_loader: DataLoader = None
+        self.test_loader: DataLoader = None
+        self.validation_loader: DataLoader = None
 
     @abstractmethod
     def perform(self, epoch: int = 1):

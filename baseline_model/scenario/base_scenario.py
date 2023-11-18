@@ -13,6 +13,7 @@ from .scenario import Scenario
 
 class BaseScenario(Scenario, ABC):
     """Base implementation for Scenario, only contains basic training function for a baseline model"""
+
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
@@ -43,8 +44,7 @@ class BaseScenario(Scenario, ABC):
                "train_eval_ratio=%.2E" % (
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.train_eval_ratio
-               )
+                   self.train_eval_ratio)
 
     def _init_data(self):
         """initialize data, including train-evaluation split and load dataset"""

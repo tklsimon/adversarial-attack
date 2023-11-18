@@ -13,7 +13,7 @@ class FgsmAttackScenario(AttackScenario):
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
                          weight_decay=weight_decay, train_eval_ratio=train_eval_ratio,
                          model=model, train_set=train_set, test_set=test_set)
-        self.epsilon = epsilon
+        self.epsilon: float = epsilon
 
     def __str__(self):
         return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
