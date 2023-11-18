@@ -28,40 +28,40 @@ class PgdAttackScenario(AttackScenario):
                    self.train_val_ratio, self.epsilon, self.alpha, self.noise_epochs)
 
     def attack(self, model: Module, inputs: Tensor, targets: Tensor) -> Tensor:
-        with torch.enable_grad():
-            # initialize attack settings
-            _inputs = inputs.clone().detach()
-            _targets = targets.clone().detach()
-            criterion = CrossEntropyLoss()
+        return pgd_attack(model, inputs, targets, self.noise_epochs, self.epsilon, self.alpha)
 
-            # initialize attack parameters
-            noise_epochs: int = self.noise_epochs
-            epsilon: float = self.epsilon
-            alpha: float = self.alpha
 
-            perturbed_input = inputs.clone().detach()
-            for i in range(noise_epochs):
-                # enable grad for inputs
-                perturbed_input.requires_grad = True
+def pgd_attack(model: Module, inputs: Tensor, targets: Tensor, noise_epochs: int, epsilon: float,
+               alpha: float) -> Tensor:
+    with torch.enable_grad():
+        # initialize attack settings
+        _inputs = inputs.clone().detach()
+        _targets = targets.clone().detach()
+        criterion = CrossEntropyLoss()
 
-                # Forward pass the data through the model
-                output = model(perturbed_input)
+        perturbed_input = inputs.clone().detach()
+        for i in range(noise_epochs):
+            # enable grad for inputs
+            perturbed_input.requires_grad = True
 
-                # Calculate the loss
-                loss: Tensor = criterion(output, _targets)
+            # Forward pass the data through the model
+            output = model(perturbed_input)
 
-                # Zero all existing gradients
-                model.zero_grad()
+            # Calculate the loss
+            loss: Tensor = criterion(output, _targets)
 
-                # Calculate gradients of model in backward pass
-                loss.backward()
+            # Zero all existing gradients
+            model.zero_grad()
 
-                # Create the perturbed image by adjusting each pixel of the input image
-                perturbed_input = perturbed_input.detach() + alpha * perturbed_input.grad.sign()
-                # confining perturbation
-                eta = torch.clamp(perturbed_input - _inputs, -epsilon, epsilon)
-                # Adding clipping to maintain [0,1] range
-                perturbed_input = torch.clamp(_inputs + eta, 0, 1)
+            # Calculate gradients of model in backward pass
+            loss.backward()
 
-            # Return the perturbed image
-            return perturbed_input.detach()
+            # Create the perturbed image by adjusting each pixel of the input image
+            perturbed_input = perturbed_input.detach() + alpha * perturbed_input.grad.sign()
+            # confining perturbation
+            eta = torch.clamp(perturbed_input - _inputs, -epsilon, epsilon)
+            # Adding clipping to maintain [0,1] range
+            perturbed_input = torch.clamp(_inputs + eta, 0, 1)
+
+        # Return the perturbed image
+        return perturbed_input.detach()

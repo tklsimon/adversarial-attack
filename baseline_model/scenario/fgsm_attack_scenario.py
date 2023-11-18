@@ -23,33 +23,34 @@ class FgsmAttackScenario(AttackScenario):
                    self.train_val_ratio, self.epsilon)
 
     def attack(self, model: Module, inputs: Tensor, targets: Tensor) -> Tensor:
-        with torch.enable_grad():
-            # initialize attack settings
-            _inputs = inputs.clone().detach()
-            _targets = targets.clone().detach()
-            criterion = CrossEntropyLoss()
+        return fgsm_attack(model, inputs, targets, self.epsilon)
 
-            # initialize attack parameters
-            epsilon: float = self.epsilon
 
-            # enable grad for inputs
-            _inputs.requires_grad = True
+def fgsm_attack(model: Module, inputs: Tensor, targets: Tensor, epsilon: float) -> Tensor:
+    with torch.enable_grad():
+        # initialize attack settings
+        _inputs = inputs.clone().detach()
+        _targets = targets.clone().detach()
+        criterion = CrossEntropyLoss()
 
-            # Forward pass the data through the model
-            output = model(_inputs)
+        # enable grad for inputs
+        _inputs.requires_grad = True
 
-            # Calculate the loss
-            loss: Tensor = criterion(output, _targets)
+        # Forward pass the data through the model
+        output = model(_inputs)
 
-            # Zero all existing gradients
-            model.zero_grad()
+        # Calculate the loss
+        loss: Tensor = criterion(output, _targets)
 
-            # Calculate gradients of model in backward pass
-            loss.backward()
+        # Zero all existing gradients
+        model.zero_grad()
 
-            # Create the perturbed image by adjusting each pixel of the input image
-            perturbed_input = _inputs.detach() + epsilon * _inputs.grad.sign()
-            # Adding clipping to maintain [0,1] range
-            perturbed_input = torch.clamp(perturbed_input, 0, 1)
-            # Return the perturbed image
-            return perturbed_input
+        # Calculate gradients of model in backward pass
+        loss.backward()
+
+        # Create the perturbed image by adjusting each pixel of the input image
+        perturbed_input = _inputs.detach() + epsilon * _inputs.grad.sign()
+        # Adding clipping to maintain [0,1] range
+        perturbed_input = torch.clamp(perturbed_input, 0, 1)
+        # Return the perturbed image
+        return perturbed_input
