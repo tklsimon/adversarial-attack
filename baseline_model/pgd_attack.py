@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # attack parameter
     parser.add_argument('--epsilon', default=0.03, type=float, help='PGD noise attack epsilon')
     parser.add_argument('--alpha', default=0.007, type=float, help='PGD noise attack alpha')
-    parser.add_argument('--num_iter', default=10, type=int, help='PGD noise attack iter')
+    parser.add_argument('--noise_epochs', default=10, type=int, help='no of epochs for PGD noise attack')
     args = parser.parse_args()
 
     print("*** pgd attack script ***")
@@ -60,7 +60,7 @@ if __name__ == '__main__':
                                             train_eval_ratio=args.train_eval_ratio,
                                             epsilon=args.epsilon,
                                             alpha=args.alpha,
-                                            num_iter=args.num_iter,
+                                            noise_epochs=args.noise_epochs,
                                             model=model,
                                             train_set=train_set,
                                             test_set=test_set)
