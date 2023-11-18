@@ -6,6 +6,14 @@ from .resnet import ResNet, Bottleneck, BasicBlock
 
 
 def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool = True) -> nn.Module:
+    """
+    get PyTorch default model
+
+    :param layers: number of layers of model
+    :param num_classes: output dimension
+    :param pretrain: load parameters from online
+    :return: pytorch nn Module
+    """
     net: nn.Module = None
     if layers == 18:
         weights = ResNet18_Weights.DEFAULT if pretrain else None
@@ -28,6 +36,13 @@ def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool =
 
 
 def get_custom_resnet(layers: int = 18, num_classes: int = 10) -> nn.Module:
+    """
+    Get custom implementation of ResNet
+
+    :param layers: number of layers of model
+    :param num_classes: output dimension
+    :return: pytorch nn Module
+    """
     net: nn.Module = None
     if layers == 18:
         net = ResNet(BasicBlock, [2, 2, 2, 2], num_classes)

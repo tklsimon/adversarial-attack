@@ -8,14 +8,27 @@ from torch.utils.data import DataLoader, Subset
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from .base_train_test_scenario import BaseTrainTestScenario
+from .scenario import Scenario
 
 
-class TrainTestScenario(BaseTrainTestScenario, ABC):
-
+class BaseScenario(Scenario, ABC):
+    """Base implementation for Scenario, only contains basic training function for a baseline model"""
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
+        """Constructor of BaseScenario
+
+        :param load_path: model weight's path under checkpoint folder
+        :param save_path: path to save trained model's weight under checkpoint folder
+        :param lr: learning rate
+        :param batch_size: batch size of processing data, use in train and test
+        :param momentum: optimizer settings
+        :param weight_decay: optimizer settings
+        :param train_eval_ratio: ratio of train dataset : evaluation dataset.  If set to 1, then all data are for training
+        :param model: model to be trained / tested
+        :param train_set: train dataset
+        :param test_set: test dataset
+        """
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
                          weight_decay=weight_decay, train_eval_ratio=train_eval_ratio,
                          model=model, train_set=train_set, test_set=test_set)
@@ -34,6 +47,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
                )
 
     def _init_data(self):
+        """initialize data, including train-evaluation split and load dataset"""
         print('==> Preparing data..')
 
         """split into train-eval set"""
@@ -57,12 +71,12 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
             self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
         else:
             self.validation_loader = None
-        print("target class available: ", self.classes)
         print("no. of train batch: ", len(train_indices))
         print("no. of validation batch: ", len(val_indices))
         print("no. of test batch: ", len(self.test_loader))
 
     def _init_model(self):
+        """initialize the model, such as loading weight"""
         print('==> Building model..')
         self.model = self.model.to(self.device_name)
         if self.device_name == 'cuda':
@@ -92,7 +106,6 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
             correct = 0
             total = 0
 
-            """evaluation"""
             progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
 
             for batch_idx, (inputs, targets) in progress_bar:
@@ -138,7 +151,8 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         progress_bar = tqdm(enumerate(data_loader), total=len(data_loader))
         with torch.no_grad():
             for batch_idx, (inputs, targets) in progress_bar:
-                inputs, targets = inputs.to(device_name), targets.to(device_name)
+                inputs = inputs.to(device_name)
+                targets = targets.to(device_name)
                 outputs = model(inputs)
                 loss = criterion(outputs, targets)
 
@@ -154,6 +168,12 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         return loss_value / len(data_loader)
 
     def save(self, state_dict: dict, save_path: str, train_param: str):
+        """Save model
+
+        :param state_dict: the weightings of the model
+        :param save_path: where to save the model
+        :param train_param: training parameter of the model
+        """
         print('==> Save to checkpoint..', save_path)
         augmented_path = os.path.join("./checkpoint", save_path)
         checkpoint_dir: str = os.path.dirname(augmented_path)
@@ -162,7 +182,7 @@ class TrainTestScenario(BaseTrainTestScenario, ABC):
         data = {'state_dict': state_dict, 'param_dict': train_param}
         torch.save(data, augmented_path)
 
-    def train_eval_test_save(self, epoch: int = 1):
+    def perform(self, epoch: int = 1):
         save_best = True if self.save_path else False
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
                                     weight_decay=self.weight_decay)

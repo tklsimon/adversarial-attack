@@ -1,15 +1,12 @@
 import torch
-import torch.nn.functional as F
 from torch import Tensor
-from torch.nn import Module
-from torch.nn.modules.loss import _Loss
-from torch.utils.data import Dataset, DataLoader
-from tqdm import tqdm
+from torch.nn import Module, CrossEntropyLoss
+from torch.utils.data import Dataset
 
-from .train_test_scenario import TrainTestScenario
+from .attack_scenario import AttackScenario
 
 
-class FgsmAttackScenario(TrainTestScenario):
+class FgsmAttackScenario(AttackScenario):
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.07):
@@ -18,27 +15,32 @@ class FgsmAttackScenario(TrainTestScenario):
                          model=model, train_set=train_set, test_set=test_set)
         self.epsilon = epsilon
 
-    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
-        model.eval()  # switch to evaluation mode
-        loss_value = 0
-        correct = 0
-        total = 0
+    def __str__(self):
+        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
+               "train_eval_ratio=%.2E, epsilon=%d" % (
+                   self.model.__class__.__name__,
+                   self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
+                   self.train_eval_ratio, self.epsilon
+               )
 
-        progress_bar = tqdm(enumerate(data_loader), total=len(data_loader))
-        # Loop over all examples in test set
-        for batch_idx, (inputs, targets) in progress_bar:
-            # Send the data and label to the device
-            inputs = inputs.to(device_name)
-            targets = targets.to(device_name)
+    def attack(self, model: Module, inputs: Tensor, targets: Tensor) -> Tensor:
+        with torch.enable_grad():
+            # initialize attack settings
+            _inputs = inputs.clone().detach()
+            _targets = targets.clone().detach()
+            criterion = CrossEntropyLoss()
 
-            # Set requires_grad attribute of tensor. Important for Attack
-            inputs.requires_grad = True
+            # initialize attack parameters
+            epsilon: float = self.epsilon
+
+            # enable grad for inputs
+            _inputs.requires_grad = True
 
             # Forward pass the data through the model
-            output = model(inputs)
+            output = model(_inputs)
 
             # Calculate the loss
-            loss = F.nll_loss(output, targets)
+            loss: Tensor = criterion(output, _targets)
 
             # Zero all existing gradients
             model.zero_grad()
@@ -46,35 +48,9 @@ class FgsmAttackScenario(TrainTestScenario):
             # Calculate gradients of model in backward pass
             loss.backward()
 
-            # get FGSM noise inputs
-            perturbed_inputs_normalized = fgsm_attack(inputs, self.epsilon)
-
-            # Re-classify the perturbed image
-            outputs = model(perturbed_inputs_normalized)
-
-            # Recalculate the loss
-            loss = F.nll_loss(output, targets)
-
-            loss_value += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
-
-            log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                loss_value / (batch_idx + 1), 100. * correct / total, correct, total
-            )
-            progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
-        return loss_value / len(data_loader)
-
-
-def fgsm_attack(inputs: Tensor, epsilon: float) -> Tensor:
-    # Collect ``datagrad``
-    data_grad = inputs.grad.data
-    # Collect the element-wise sign of the data gradient
-    sign_data_grad = data_grad.sign()
-    # Create the perturbed image by adjusting each pixel of the input image
-    perturbed_input = inputs + epsilon * sign_data_grad
-    # Adding clipping to maintain [0,1] range
-    perturbed_input = torch.clamp(perturbed_input, 0, 1)
-    # Return the perturbed image
-    return perturbed_input
+            # Create the perturbed image by adjusting each pixel of the input image
+            perturbed_input = _inputs.detach() + epsilon * _inputs.grad.sign()
+            # Adding clipping to maintain [0,1] range
+            perturbed_input = torch.clamp(perturbed_input, 0, 1)
+            # Return the perturbed image
+            return perturbed_input
