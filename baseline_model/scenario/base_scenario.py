@@ -15,7 +15,7 @@ class BaseScenario(Scenario, ABC):
     """Base implementation for Scenario, only contains basic training function for a baseline model"""
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
+                 momentum: float = 0.9, weight_decay: float = 0, train_val_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
         """Constructor of BaseScenario
 
@@ -25,13 +25,13 @@ class BaseScenario(Scenario, ABC):
         :param batch_size: batch size of processing data, use in train and test
         :param momentum: optimizer settings
         :param weight_decay: optimizer settings
-        :param train_eval_ratio: ratio of train dataset : evaluation dataset.  If set to 1, then all data are for training
+        :param train_val_ratio: ratio of train dataset : validation dataset.  If set to 1, then all data are for training
         :param model: model to be trained / tested
         :param train_set: train dataset
         :param test_set: test dataset
         """
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
-                         weight_decay=weight_decay, train_eval_ratio=train_eval_ratio,
+                         weight_decay=weight_decay, train_val_ratio=train_val_ratio,
                          model=model, train_set=train_set, test_set=test_set)
 
         # initialize objects
@@ -41,19 +41,19 @@ class BaseScenario(Scenario, ABC):
 
     def __str__(self):
         return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
-               "train_eval_ratio=%.2E" % (
+               "train_val_ratio=%.2E" % (
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.train_eval_ratio)
+                   self.train_val_ratio)
 
     def _init_data(self):
-        """initialize data, including train-evaluation split and load dataset"""
+        """initialize data, including train-validation split and load dataset"""
         print('==> Preparing data..')
 
-        """split into train-eval set"""
+        """split into train-val set"""
         # Calculate the number of samples for each split
         num_samples = len(self.train_set)
-        train_size = int(self.train_eval_ratio * num_samples)
+        train_size = int(self.train_val_ratio * num_samples)
 
         # Create indices for train and validation sets
         indices = list(range(num_samples))
@@ -67,7 +67,7 @@ class BaseScenario(Scenario, ABC):
         # split into validation and train set
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
         self.test_loader = DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
-        if self.train_eval_ratio < 1:
+        if self.train_val_ratio < 1:
             self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
         else:
             self.validation_loader = None
@@ -128,10 +128,10 @@ class BaseScenario(Scenario, ABC):
 
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
-            """evaluation"""
+            """validation"""
             if self.validation_loader is not None and len(validation_loader) > 0:
-                eval_loss: float = self.test(model, device_name, validation_loader, criterion)
-                # scheduler.step(eval_loss))
+                val_loss: float = self.test(model, device_name, validation_loader, criterion)
+                # scheduler.step(val_loss))
             scheduler.step()
 
             if save_best:
@@ -190,7 +190,7 @@ class BaseScenario(Scenario, ABC):
                                                         epochs=epoch)
         criterion = torch.nn.CrossEntropyLoss()
 
-        """train, evaluate and save best model"""
+        """train, validation and save best model"""
         self.train(self.model, self.device_name, self.train_loader, self.validation_loader, optimizer, scheduler,
                    criterion, save_best, epoch)
         """test"""
