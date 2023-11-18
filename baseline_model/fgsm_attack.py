@@ -16,7 +16,7 @@ from scenario.scenario import Scenario  # noqa
 from scenario.fgsm_attack_scenario import FgsmAttackScenario  # noqa
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='FGSM Attack Test')
+    parser = ArgumentParser(description='FGSM Attack Script')
     # model parameters
     parser.add_argument('--lr', default=3e-4, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
