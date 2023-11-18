@@ -1,13 +1,31 @@
 from random import random
 
 from torch.nn import Module
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 from .pgd_attack_scenario import PgdAttackScenario
 
 
 class PgdDefenseScenario(PgdAttackScenario):
+
+    def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
+                 momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
+                 model: Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.03,
+                 alpha: float = 0.007, num_iter: int = 10, attack_ratio: float = 1):
+        super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
+                         weight_decay=weight_decay, train_eval_ratio=train_eval_ratio,
+                         model=model, train_set=train_set, test_set=test_set,
+                         epsilon=epsilon, alpha=alpha, num_iter=num_iter
+                         )
+        self.attack_ratio: float = attack_ratio
+
+    def __str__(self):
+        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
+               "train_eval_ratio=%.2E, epsilon=%.2E, alpha=%.2E, num_iter=%d, attack_ratio=%f" % (
+                   self.model.__class__.__name__,
+                   self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
+                   self.train_eval_ratio, self.epsilon, self.alpha, self.num_iter, self.attack_ratio)
 
     def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
@@ -29,9 +47,7 @@ class PgdDefenseScenario(PgdAttackScenario):
 
                 optimizer.zero_grad()
 
-                rand_num = random()
-
-                if rand_num < 0.5:
+                if random() < self.attack_ratio:
                     # 50% chance to perform PGD attack
                     perturbed_inputs = self.attack(model, inputs, targets)
                     outputs = model(perturbed_inputs)

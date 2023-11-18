@@ -44,8 +44,7 @@ class BaseScenario(Scenario, ABC):
                "train_eval_ratio=%.2E" % (
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.train_eval_ratio
-               )
+                   self.train_eval_ratio)
 
     def _init_data(self):
         """initialize data, including train-evaluation split and load dataset"""

@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--test_only', default=False, action='store_true', help='only test model')
     parser.add_argument('--dry_run', default=False, action='store_true', help='will not train or test model')
     parser.add_argument('--load_data', default=False, action='store_true', help='download data if not available')
+    parser.add_argument('--attack_ratio', default=1, type=float, help='ratio of PGD noise attack when train')
     # model parameter
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
@@ -61,6 +62,7 @@ if __name__ == '__main__':
                                             epsilon=args.epsilon,
                                             alpha=args.alpha,
                                             num_iter=args.num_iter,
+                                            attack_ratio=args.attack_ratio,
                                             model=model,
                                             train_set=train_set,
                                             test_set=test_set)
