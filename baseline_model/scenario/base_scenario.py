@@ -1,5 +1,6 @@
 import os
 from abc import ABC
+from typing import Dict
 
 import torch
 from torch.nn import Module
@@ -143,7 +144,7 @@ class BaseScenario(Scenario, ABC):
         if save_best:
             self.save(best_model_state_dict, self.save_path, str(self))
 
-    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
+    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> Dict:
         model.eval()  # switch to evaluation mode
         loss_value = 0
         correct = 0
@@ -165,7 +166,7 @@ class BaseScenario(Scenario, ABC):
                     loss_value / (batch_idx + 1), 100. * correct / total, correct, total
                 )
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
-        return loss_value / len(data_loader)
+        return {'average test_loss': loss_value / len(data_loader), 'accuracy': correct / total}
 
     def save(self, state_dict: dict, save_path: str, train_param: str):
         """Save model
@@ -182,7 +183,7 @@ class BaseScenario(Scenario, ABC):
         data = {'state_dict': state_dict, 'param_dict': train_param}
         torch.save(data, augmented_path)
 
-    def perform(self, epoch: int = 1):
+    def perform(self, epoch: int = 1) -> Dict:
         save_best = True if self.save_path else False
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
                                     weight_decay=self.weight_decay)
@@ -195,6 +196,7 @@ class BaseScenario(Scenario, ABC):
                    criterion, save_best, epoch)
         """test"""
         print('==> Test')
-        test_loss = self.test(self.model, self.device_name, self.test_loader, criterion)
+        test_metric = self.test(self.model, self.device_name, self.test_loader, criterion)
 
         torch.cuda.empty_cache()
+        return test_metric

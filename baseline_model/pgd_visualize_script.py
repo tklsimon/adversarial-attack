@@ -1,14 +1,13 @@
 import os
 from argparse import ArgumentParser
 
-import torchvision
 import torchvision.transforms as transforms
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import Dataset, Subset, DataLoader
 
-from baseline_model.dataset import dataset
-from baseline_model.model import model_selector
+from dataset import dataset
+from model import model_selector
 from scenario.pgd_attack_scenario import pgd_attack
 
 if __name__ == '__main__':
@@ -29,7 +28,7 @@ if __name__ == '__main__':
     # visualize parameter
     parser.add_argument('--img_path', default="", type=str, help='save image')
     parser.add_argument('--image_index_start', default=0, type=int, help='range of image to be generated')
-    parser.add_argument('--image_index_end', default=2, type=int, help='range of image to be generated')
+    parser.add_argument('--image_index_end', default=10, type=int, help='range of image to be generated')
     args = parser.parse_args()
 
     print("*** visualization script script ***")
@@ -59,20 +58,21 @@ if __name__ == '__main__':
         os.makedirs(img_dir)
 
     for (inputs, labels) in dataloader:
-        print(labels.shape)
-        print(inputs.shape)
+        _input = inputs[1]
+        _label = labels[1]
 
-        print()
-        print(labels[0])
-        pil_image = transforms.ToPILImage()(inputs[0])
+        pil_image = transforms.ToPILImage()(_input)
         pil_image.save('img/ori.jpg')
 
         blurred_tensor: Tensor = pgd_attack(model, inputs, labels, args.noise_epochs, args.epsilon, args.alpha)
-        print(blurred_tensor.shape)
-        blurred_image = transforms.ToPILImage()(blurred_tensor[0])
+        _blurred_tensor = blurred_tensor[1]
+
+        blurred_image = transforms.ToPILImage()(_blurred_tensor)
         blurred_image.save('img/blurred.jpg')
 
-        noise_tensor: Tensor = blurred_tensor[0] - inputs[0]
+        noise_tensor: Tensor = _blurred_tensor - _input
         noise_tensor /= args.alpha
         noise_image = transforms.ToPILImage()(noise_tensor)
         noise_image.save('img/noise.jpg')
+
+        print("target=", dataset.get_cifar10_targets()[_label.item()])

@@ -1,19 +1,12 @@
-import os
-import sys
 from argparse import ArgumentParser
 
 from torch.nn import Module
 from torch.utils.data import Dataset
 
-from baseline_model.scenario.fgsm_defense_scenario import FgsmDefenseScenario
 from dataset import dataset
 from model import model_selector
-
-par_dir: str = os.path.dirname(os.getcwd())
-sys.path.append(par_dir)
-
-from scenario.scenario import Scenario  # noqa
-from scenario.fgsm_attack_scenario import FgsmAttackScenario  # noqa
+from scenario.fgsm_defense_scenario import FgsmDefenseScenario
+from scenario.scenario import Scenario
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='FGSM Attack Script')
@@ -51,16 +44,16 @@ if __name__ == '__main__':
     train_set: Dataset = dataset.get_random_cifar10_dataset(True, download=args.load_data)
     test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=args.load_data)
     scenario: Scenario = FgsmDefenseScenario(load_path=args.load_path,
-                                            save_path=args.save_path,
-                                            batch_size=args.batch_size,
-                                            lr=args.lr,
-                                            momentum=args.momentum,
-                                            weight_decay=args.weight_decay,
-                                            train_val_ratio=args.train_val_ratio,
-                                            epsilon=args.epsilon,
-                                            model=model,
-                                            train_set=train_set,
-                                            test_set=test_set)
+                                             save_path=args.save_path,
+                                             batch_size=args.batch_size,
+                                             lr=args.lr,
+                                             momentum=args.momentum,
+                                             weight_decay=args.weight_decay,
+                                             train_val_ratio=args.train_val_ratio,
+                                             epsilon=args.epsilon,
+                                             model=model,
+                                             train_set=train_set,
+                                             test_set=test_set)
 
     if not args.dry_run:
         if args.test_only:
