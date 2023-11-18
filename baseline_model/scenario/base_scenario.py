@@ -13,6 +13,7 @@ from .scenario import Scenario
 
 class BaseScenario(Scenario, ABC):
     """Base implementation for Scenario, only contains basic training function for a baseline model"""
+
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
