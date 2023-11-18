@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 from torch.nn import Module
 from torch.utils.data import Dataset
 
+from baseline_model.scenario.fgsm_defense_scenario import FgsmDefenseScenario
 from dataset import dataset
 from model import model_selector
 
@@ -49,7 +50,7 @@ if __name__ == '__main__':
         model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
     train_set: Dataset = dataset.get_random_cifar10_dataset(True, download=args.load_data)
     test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=args.load_data)
-    scenario: Scenario = FgsmAttackScenario(load_path=args.load_path,
+    scenario: Scenario = FgsmDefenseScenario(load_path=args.load_path,
                                             save_path=args.save_path,
                                             batch_size=args.batch_size,
                                             lr=args.lr,
