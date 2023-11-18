@@ -31,8 +31,7 @@ if __name__ == '__main__':
 
     print("*** train-test-load script ***")
     print("*** arguments: ***")
-    print(args)
-    print()
+    print(args, "/n")
 
     # initialize scenario
     if args.model_type == 'custom':
@@ -57,3 +56,7 @@ if __name__ == '__main__':
             scenario.perform(0)
         else:
             scenario.perform(args.train_epochs)
+    else:
+        print("Dry run completed.")
+
+    print("Done.")

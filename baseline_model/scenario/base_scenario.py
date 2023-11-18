@@ -25,7 +25,7 @@ class BaseScenario(Scenario, ABC):
         :param batch_size: batch size of processing data, use in train and test
         :param momentum: optimizer settings
         :param weight_decay: optimizer settings
-        :param train_eval_ratio: ratio of train dataset : evaluation dataset.  If set to 1, then all data are for training
+        :param train_eval_ratio: ratio of train dataset : evaluation dataset. If set to 1, then all data are for training
         :param model: model to be trained / tested
         :param train_set: train dataset
         :param test_set: test dataset
