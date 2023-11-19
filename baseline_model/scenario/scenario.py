@@ -3,16 +3,18 @@ Import cifar10 image data with PyTorch
 https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 """
 from abc import abstractmethod, ABC
+from typing import Dict
 
 from torch.nn import Module
 from torch.utils.data import Dataset, DataLoader
 
 
 class Scenario(ABC):
-    """Interface of the Scenario Class.  A default scenario should contains the below stages:
-    load model, repeat (train, evaluate), save model and test"""
+    """Interface of the Scenario Class.  A default scenario should contain the below stages:
+    load model, repeat (train, validation), save model and test"""
+
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
+                 momentum: float = 0.9, weight_decay: float = 0, train_val_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
         """Constructor of Scenario
 
@@ -22,7 +24,7 @@ class Scenario(ABC):
         :param batch_size: batch size of processing data, use in train and test
         :param momentum: optimizer settings
         :param weight_decay: optimizer settings
-        :param train_eval_ratio: ratio of train dataset : evaluation dataset.  If set to 1, then all data are for training
+        :param train_val_ratio: ratio of train dataset : validation dataset.  If set to 1, then train with all data
         :param model: model to be trained / tested
         :param train_set: train dataset
         :param test_set: test dataset
@@ -38,7 +40,7 @@ class Scenario(ABC):
         self.lr: float = lr
         self.momentum: float = momentum
         self.weight_decay: float = weight_decay
-        self.train_eval_ratio: float = train_eval_ratio
+        self.train_val_ratio: float = train_val_ratio
 
         # train and test parameter
         self.train_set: Dataset = train_set
@@ -48,11 +50,11 @@ class Scenario(ABC):
         self.validation_loader: DataLoader = None
 
     @abstractmethod
-    def perform(self, epoch: int = 1):
+    def perform(self, epoch: int = 1) -> Dict:
         """
         Perform the scenario
 
         :param epoch: number of training iteration
+        :return Dict: test metrics
         """
         pass
-
