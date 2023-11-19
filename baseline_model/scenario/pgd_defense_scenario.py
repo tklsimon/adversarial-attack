@@ -1,9 +1,9 @@
-from random import random
+import copy
+from typing import Dict
 
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
-import copy
 
 from .pgd_attack_scenario import PgdAttackScenario
 
@@ -72,7 +72,7 @@ class PgdDefenseScenario(PgdAttackScenario):
 
             """validation"""
             if self.validation_loader is not None and len(validation_loader) > 0:
-                eval_loss: float = self.test(model, device_name, validation_loader, criterion)
+                eval_loss: Dict = self.test(model, device_name, validation_loader, criterion)
                 # scheduler.step(eval_loss))
             scheduler.step()
 
