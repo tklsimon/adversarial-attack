@@ -30,6 +30,7 @@ class PgdDefenseScenario(PgdAttackScenario):
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
         best_val_score = 0
         best_model_state_dict: dict = dict()
+        best_epoch: int = 0
         ori_model: Module = copy.deepcopy(model)
         for i in range(epoch):
             print('==> Train Epoch: %d..' % i)
@@ -71,16 +72,22 @@ class PgdDefenseScenario(PgdAttackScenario):
                         progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
             """validation"""
+            val_loss: Dict
             if self.validation_loader is not None and len(validation_loader) > 0:
-                eval_loss: Dict = self.test(model, device_name, validation_loader, criterion)
+                val_loss = self.test(model, device_name, validation_loader, criterion)
                 # scheduler.step(eval_loss))
             scheduler.step()
 
             if save_best:
-                if 100. * correct / total > best_val_score:
-                    best_val_score = 100. * correct / total
-                    best_model_state_dict = model.state_dict()
+                if 'accuracy' in val_loss.keys():
+                    if val_loss['accuracy'] > best_val_score:
+                        print("==> current best epoch = %d" % i)
+                        best_val_score = val_loss['accuracy']
+                        best_model_state_dict = model.state_dict()
+                        best_epoch = i
+                else:
+                    best_epoch = i
 
         """save"""
         if save_best:
-            self.save(best_model_state_dict, self.save_path, str(self))
+            self.save(best_model_state_dict, self.save_path, str(self) + ", best epoch=" + str(best_epoch))
