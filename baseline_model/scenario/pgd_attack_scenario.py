@@ -1,9 +1,7 @@
 import torch
 from torch import Tensor
 from torch.nn import Module, CrossEntropyLoss
-from torch.nn.modules.loss import _Loss
-from torch.utils.data import Dataset, DataLoader
-from tqdm import tqdm
+from torch.utils.data import Dataset
 
 from .attack_scenario import AttackScenario
 
