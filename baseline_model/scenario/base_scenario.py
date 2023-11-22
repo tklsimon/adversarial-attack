@@ -53,27 +53,27 @@ class BaseScenario(Scenario, ABC):
 
         """split into train-val set"""
         # Calculate the number of samples for each split
-        num_samples = len(self.train_set)
-        train_size = int(self.train_val_ratio * num_samples)
+        num_samples = len(self.test_set)
+        test_size = int(self.train_val_ratio * num_samples)
 
         # Create indices for train and validation sets
         indices = list(range(num_samples))
-        train_indices = indices[:train_size]
-        val_indices = indices[train_size:]
+        test_indices = indices[:test_size]
+        val_indices = indices[test_size:]
 
         # Create subsets for train and validation sets
-        train_dataset = Subset(self.train_set, train_indices)
-        val_dataset = Subset(self.train_set, val_indices)
+        test_dataset = Subset(self.test_set, test_indices)
+        val_dataset = Subset(self.test_set, val_indices)
 
         # split into validation and train set
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
-        self.test_loader = DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=2)
+        self.train_loader = DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=2)
+        self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=2)
         if self.train_val_ratio < 1:
             self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
         else:
             self.validation_loader = None
-        print("no. of train batch: ", len(train_indices))
-        print("no. of validation batch: ", len(val_indices))
+        print("no. of train batch: ", len(self.train_loader))
+        print("no. of validation batch: ", len(self.validation_loader))
         print("no. of test batch: ", len(self.test_loader))
 
     def _init_model(self):
