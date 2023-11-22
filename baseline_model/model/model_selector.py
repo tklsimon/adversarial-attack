@@ -1,6 +1,8 @@
 from torch import nn
-from torchvision.models import resnet18, ResNet18_Weights, ResNet50_Weights, resnet50, ResNet101_Weights, resnet101, \
-    resnet152, ResNet152_Weights, ResNet34_Weights, resnet34
+from torchvision.models import \
+    resnet18, ResNet18_Weights, resnet34, ResNet34_Weights, \
+    ResNet50_Weights, resnet50, ResNet101_Weights, resnet101, \
+    resnet152, ResNet152_Weights
 
 from .resnet import ResNet, Bottleneck, BasicBlock
 

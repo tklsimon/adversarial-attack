@@ -8,9 +8,12 @@ from torch.utils.data import Dataset
 from argparse import ArgumentParser
 
 if __name__ == '__main__':
+    print("*** train-test-load script ***/n")
+
+    # Initialize Parser for Arguments
     parser = ArgumentParser(description='PyTorch ResNet CIFAR10 Training')
 
-    # model parameters
+    # Model parameters
     parser.add_argument('--lr', default=3e-4, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
@@ -20,7 +23,8 @@ if __name__ == '__main__':
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
     parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
     parser.add_argument('--model_type', default='', type=str, help='custom or default model')
-    # train and test parameters
+
+    # Train and Test Parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
     parser.add_argument('--train_val_ratio', default=0.99, type=float, help='ratio for train-eval split')
     parser.add_argument('--test_only', default=False, action='store_true', help='only test model')
@@ -29,17 +33,20 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    print("*** train-test-load script ***")
     print("*** arguments: ***")
     print(args, "/n")
 
-    # initialize scenario
+    # Initialize Resnet Model
     if args.model_type == 'custom':
         model: Module = model_selector.get_custom_resnet(layers=args.layers)
     else:
         model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
+
+    # Load Training Set and Test Set
     train_set: Dataset = dataset.get_random_cifar10_dataset(True, download=args.load_data)
     test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=args.load_data)
+
+    # Initialize scenario
     scenario: Scenario = BaseScenario(load_path=args.load_path,
                                       save_path=args.save_path,
                                       batch_size=args.batch_size,
@@ -51,12 +58,16 @@ if __name__ == '__main__':
                                       train_set=train_set,
                                       test_set=test_set)
 
+    # Perform Training and Testing
     if not args.dry_run:
         if args.test_only:
+            print("Will perform testing process only.")
             scenario.perform(0)
         else:
+            print("Will perform training and testing process.")
             scenario.perform(args.train_epochs)
     else:
+        print("Will perform dry run only.")
         print("Dry run completed.")
 
     print("Done.")

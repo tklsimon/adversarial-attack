@@ -77,8 +77,8 @@ class BaseScenario(Scenario, ABC):
         print("no. of test batch: ", len(self.test_loader))
 
     def _init_model(self):
-        """initialize the model, such as loading weight"""
-        print('==> Building model..')
+        """initialize the model, such as loading weights"""
+        print('==> Initialize model..')
         self.model = self.model.to(self.device_name)
         if self.device_name == 'cuda':
             self.model = torch.nn.DataParallel(self.model)
