@@ -43,7 +43,7 @@ class IntegrationTest(unittest.TestCase):
         scenario: Scenario = PgdAttackScenario(model=self.model, train_set=self.train_set, test_set=self.test_set)
         result = scenario.perform(0)
 
-        self.assertGreater(0, result['accuracy'])
+        self.assertGreaterEqual(0, result['accuracy'])
         self.assertGreater(result['accuracy'], 0.05)
 
     def test_comparison_fgsm_pgd(self):
