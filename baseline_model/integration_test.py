@@ -44,7 +44,7 @@ class IntegrationTest(unittest.TestCase):
         result = scenario.perform(0)
 
         self.assertGreaterEqual(0, result['accuracy'])
-        self.assertGreater(result['accuracy'], 0.05)
+        self.assertGreater(result['accuracy'], 0.15)
 
     def test_comparison_fgsm_pgd(self):
         """
