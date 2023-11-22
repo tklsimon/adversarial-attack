@@ -16,7 +16,7 @@ class BaseScenario(Scenario, ABC):
     """Base implementation for Scenario, only contains basic training function for a baseline model"""
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, train_val_ratio: float = 0.99,
+                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
         """Constructor of BaseScenario
 
@@ -26,13 +26,13 @@ class BaseScenario(Scenario, ABC):
         :param batch_size: batch size of processing data, use in train and test
         :param momentum: optimizer settings
         :param weight_decay: optimizer settings
-        :param train_val_ratio: ratio of train dataset : validation dataset.  If set to 1, then all data are for training
+        :param test_val_ratio: ratio of test dataset : validation dataset.  If set to 1, then all data are for testing
         :param model: model to be trained / tested
         :param train_set: train dataset
         :param test_set: test dataset
         """
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
-                         weight_decay=weight_decay, train_val_ratio=train_val_ratio,
+                         weight_decay=weight_decay, test_val_ratio=test_val_ratio,
                          model=model, train_set=train_set, test_set=test_set)
 
         # initialize objects
@@ -42,10 +42,10 @@ class BaseScenario(Scenario, ABC):
 
     def __str__(self):
         return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
-               "train_val_ratio=%.2E" % (
+               "test_val_ratio=%.2E" % (
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.train_val_ratio)
+                   self.test_val_ratio)
 
     def _init_data(self):
         """initialize data, including train-validation split and load dataset"""
@@ -54,7 +54,7 @@ class BaseScenario(Scenario, ABC):
         """split into train-val set"""
         # Calculate the number of samples for each split
         num_samples = len(self.test_set)
-        test_size = int(self.train_val_ratio * num_samples)
+        test_size = int(self.test_val_ratio * num_samples)
 
         # Create indices for train and validation sets
         indices = list(range(num_samples))
@@ -68,7 +68,7 @@ class BaseScenario(Scenario, ABC):
         # split into validation and train set
         self.train_loader = DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=2)
         self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=2)
-        if self.train_val_ratio < 1:
+        if self.test_val_ratio < 1:
             self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
         else:
             self.validation_loader = None

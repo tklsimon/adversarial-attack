@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     # Train and Test Parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
-    parser.add_argument('--train_val_ratio', default=0.99, type=float, help='ratio for train-eval split')
+    parser.add_argument('--test_val_ratio', default=0.99, type=float, help='ratio for train-eval split')
     parser.add_argument('--test_only', default=False, action='store_true', help='only test model')
     parser.add_argument('--dry_run', default=False, action='store_true', help='will not train or test model')
     parser.add_argument('--load_data', default=False, action='store_true', help='download data if not available')
@@ -53,7 +53,7 @@ if __name__ == '__main__':
                                       lr=args.lr,
                                       momentum=args.momentum,
                                       weight_decay=args.weight_decay,
-                                      train_val_ratio=args.train_val_ratio,
+                                      test_val_ratio=args.test_val_ratio,
                                       model=model,
                                       train_set=train_set,
                                       test_set=test_set)
