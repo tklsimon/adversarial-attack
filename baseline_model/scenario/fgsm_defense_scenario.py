@@ -1,4 +1,5 @@
 import copy
+from typing import Dict
 
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
@@ -10,26 +11,27 @@ from .fgsm_attack_scenario import FgsmAttackScenario
 class FgsmDefenseScenario(FgsmAttackScenario):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, train_val_ratio: float = 0.99,
+                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.03,
                  attack_ratio: float = 1):
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
-                         weight_decay=weight_decay, train_val_ratio=train_val_ratio,
+                         weight_decay=weight_decay, test_val_ratio=test_val_ratio,
                          model=model, train_set=train_set, test_set=test_set,
                          epsilon=epsilon)
         self.attack_ratio: float = attack_ratio
 
     def __str__(self):
         return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
-               "train_val_ratio=%.2E, epsilon=%.2E" % (
+               "test_val_ratio=%.2E, epsilon=%.2E" % (
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.train_val_ratio, self.epsilon)
+                   self.test_val_ratio, self.epsilon)
 
     def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
         best_val_score = 0
         best_model_state_dict: dict = dict()
+        best_epoch: int = 0
         ori_model: Module = copy.deepcopy(model)
         for i in range(epoch):
             print('==> Train Epoch: %d..' % i)
@@ -71,16 +73,22 @@ class FgsmDefenseScenario(FgsmAttackScenario):
                         progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
             """validation"""
+            val_loss: Dict = {}
             if self.validation_loader is not None and len(validation_loader) > 0:
-                val_loss: float = self.test(model, device_name, validation_loader, criterion)
+                val_loss = self.test(model, device_name, validation_loader, criterion)
                 # scheduler.step(val_loss))
             scheduler.step()
 
             if save_best:
-                if 100. * correct / total > best_val_score:
-                    best_val_score = 100. * correct / total
-                    best_model_state_dict = model.state_dict()
+                if 'accuracy' in val_loss.keys():
+                    if val_loss['accuracy'] > best_val_score:
+                        print("==> current best epoch = %d" % i)
+                        best_val_score = val_loss['accuracy']
+                        best_model_state_dict = model.state_dict()
+                        best_epoch = i
+                else:
+                    best_epoch = i
 
         """save"""
         if save_best:
-            self.save(best_model_state_dict, self.save_path, str(self))
+            self.save(best_model_state_dict, self.save_path, str(self) + ", best epoch=" + str(best_epoch))
