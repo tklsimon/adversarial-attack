@@ -76,5 +76,6 @@ class RandomNoiseDefenseScenario(PgdAttackScenario):
         epsilon: float = self.epsilon
         variance: int = 3
         noise = torch.randn(*inputs.shape).to(self.device_name) * variance
+        noise = torch.clamp(noise, -1, 1)
         noise = noise * epsilon
         return inputs + noise
