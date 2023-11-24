@@ -1,6 +1,6 @@
 import os
 from abc import ABC
-from typing import Dict
+from typing import Dict, List
 
 import torch
 from torch.nn import Module
@@ -37,12 +37,14 @@ class BaseScenario(Scenario, ABC):
 
         # initialize objects
         self.device_name = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.previous_params: List = []
         self._init_data()
         self._init_model()
 
     def __str__(self):
-        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
-               "test_val_ratio=%.2E" % (
+        return "Scenario=%s, model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, " \
+               "momentum=%.2E, test_val_ratio=%.2E" % (
+                   self.__class__.__name__,
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
                    self.test_val_ratio)
@@ -85,14 +87,12 @@ class BaseScenario(Scenario, ABC):
             torch.backends.cudnn.benchmark = True
         if self.load_path:
             print('==> Resuming from checkpoint ', self.load_path)
-            augmented_path = os.path.join("checkpoint", self.load_path)
-            checkpoint_dir: str = os.path.dirname(augmented_path)
-            if not os.path.exists(checkpoint_dir):
-                os.makedirs(checkpoint_dir)
+            augmented_path = self._get_or_create_checkpoint_path(self.load_path)
             checkpoint = torch.load(augmented_path, map_location=self.device_name)
             self.model.load_state_dict(checkpoint['state_dict'])
             if 'param_dict' in checkpoint:
                 print("==> Loaded model: ", checkpoint['param_dict'])
+                self.previous_params = eval(checkpoint['param_dict'])
 
     def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
@@ -142,14 +142,15 @@ class BaseScenario(Scenario, ABC):
                     if val_loss['accuracy'] > best_val_score:
                         print("==> current best epoch = %d" % i)
                         best_val_score = val_loss['accuracy']
-                        best_model_state_dict = model.state_dict()
+                        best_model_state_dict = model.state_dict().copy()
                         best_epoch = i
                 else:
                     best_epoch = i
 
         """save"""
         if save_best:
-            self.save(best_model_state_dict, self.save_path, str(self) + ", best epoch=" + str(best_epoch))
+            self.previous_params.append(str(self) + ", best epoch=" + str(best_epoch))
+            self.save(best_model_state_dict, self.save_path, self.previous_params)
 
     def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> Dict:
         model.eval()  # switch to evaluation mode
@@ -175,19 +176,16 @@ class BaseScenario(Scenario, ABC):
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
         return {'average test_loss': loss_value / len(data_loader), 'accuracy': correct / total}
 
-    def save(self, state_dict: dict, save_path: str, train_param: str):
+    def save(self, state_dict: dict, save_path: str, train_params: List):
         """Save model
 
+        :param train_params: all the previous and current train parameters
         :param state_dict: the weightings of the model
         :param save_path: where to save the model
-        :param train_param: training parameter of the model
         """
         print('==> Save to checkpoint..', save_path)
-        augmented_path = os.path.join("checkpoint", save_path)
-        checkpoint_dir: str = os.path.dirname(augmented_path)
-        if not os.path.exists(checkpoint_dir):
-            os.makedirs(checkpoint_dir)
-        data = {'state_dict': state_dict, 'param_dict': train_param}
+        augmented_path = self._get_or_create_checkpoint_path(save_path)
+        data = {'state_dict': state_dict, 'param_dict': str(train_params)}
         torch.save(data, augmented_path)
 
     def perform(self, epoch: int = 1) -> Dict:
@@ -207,3 +205,10 @@ class BaseScenario(Scenario, ABC):
 
         torch.cuda.empty_cache()
         return test_metric
+
+    def _get_or_create_checkpoint_path(self, input_path) -> str:
+        augmented_path = os.path.join("checkpoint", input_path)
+        checkpoint_dir: str = os.path.dirname(augmented_path)
+        if not os.path.exists(checkpoint_dir):
+            os.makedirs(checkpoint_dir)
+        return augmented_path
