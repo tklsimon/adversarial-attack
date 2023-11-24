@@ -85,11 +85,11 @@ class BaseScenario(Scenario, ABC):
             torch.backends.cudnn.benchmark = True
         if self.load_path:
             print('==> Resuming from checkpoint ', self.load_path)
-            augmented_path = os.path.join("./checkpoint", self.load_path)
+            augmented_path = os.path.join("checkpoint", self.load_path)
             checkpoint_dir: str = os.path.dirname(augmented_path)
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
-            checkpoint = torch.load(augmented_path)
+            checkpoint = torch.load(augmented_path, map_location=self.device_name)
             self.model.load_state_dict(checkpoint['state_dict'])
             if 'param_dict' in checkpoint:
                 print("==> Loaded model: ", checkpoint['param_dict'])
@@ -183,7 +183,7 @@ class BaseScenario(Scenario, ABC):
         :param train_param: training parameter of the model
         """
         print('==> Save to checkpoint..', save_path)
-        augmented_path = os.path.join("./checkpoint", save_path)
+        augmented_path = os.path.join("checkpoint", save_path)
         checkpoint_dir: str = os.path.dirname(augmented_path)
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
