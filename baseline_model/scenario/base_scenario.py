@@ -91,8 +91,10 @@ class BaseScenario(Scenario, ABC):
             checkpoint = torch.load(augmented_path, map_location=self.device_name)
             self.model.load_state_dict(checkpoint['state_dict'])
             if 'param_dict' in checkpoint:
-                print("==> Loaded model: ", checkpoint['param_dict'])
+                print("==> Loaded model: ")
                 self.previous_params = eval(checkpoint['param_dict'])
+                for i in range(len(self.previous_params)):
+                    print("==> [%2d] %s" % (i, self.previous_params[i]))
 
     def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
