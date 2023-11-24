@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 from argparse import ArgumentParser
 
 if __name__ == '__main__':
-    print("*** train-test-load script ***/n")
+    print("*** train-test-load script ***")
 
     # Initialize Parser for Arguments
     parser = ArgumentParser(description='PyTorch ResNet CIFAR10 Training')
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print("*** arguments: ***")
-    print(args, "/n")
+    print(args)
 
     # Initialize Resnet Model
     if args.model_type == 'custom':
