@@ -1,11 +1,12 @@
+from argparse import ArgumentParser
+
 from torch.nn import Module
 from torch.utils.data import Dataset
-from argparse import ArgumentParser
 
 from dataset import dataset
 from model import model_selector
+from scenario.fgsm_attack_scenario import FgsmAttackScenario
 from scenario.scenario import Scenario
-from scenario.fgsm_defense_scenario import FgsmDefenseScenario
 
 if __name__ == '__main__':
     print("*** fgsm attack script ***")
@@ -46,18 +47,17 @@ if __name__ == '__main__':
     test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=args.load_data)
 
     # Initialize Scenario
-    scenario: Scenario = FgsmDefenseScenario(load_path=args.load_path,
-                                             save_path=args.save_path,
-                                             batch_size=args.batch_size,
-                                             lr=args.lr,
-                                             momentum=args.momentum,
-                                             weight_decay=args.weight_decay,
-                                             test_val_ratio=args.test_val_ratio,
-                                             epsilon=args.epsilon,
-                                             model=model,
-                                             train_set=train_set,
-                                             test_set=test_set)
-
+    scenario: Scenario = FgsmAttackScenario(load_path=args.load_path,
+                                            save_path=args.save_path,
+                                            batch_size=args.batch_size,
+                                            lr=args.lr,
+                                            momentum=args.momentum,
+                                            weight_decay=args.weight_decay,
+                                            test_val_ratio=args.test_val_ratio,
+                                            epsilon=args.epsilon,
+                                            model=model,
+                                            train_set=train_set,
+                                            test_set=test_set)
 
     # Perform Training and Testing
     if not args.dry_run:
