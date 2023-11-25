@@ -19,8 +19,9 @@ class PgdAttackScenario(AttackScenario):
         self.noise_epochs: int = noise_epochs
 
     def __str__(self):
-        return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
+        return "Scenario=%s, model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
                "test_val_ratio=%.2E, epsilon=%.2E, alpha=%.2E, num_iter=%d" % (
+                   self.__class__.__name__,
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
                    self.test_val_ratio, self.epsilon, self.alpha, self.noise_epochs)

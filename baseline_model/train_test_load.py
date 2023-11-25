@@ -8,7 +8,7 @@ from scenario.scenario import Scenario
 from scenario.base_scenario import BaseScenario
 
 if __name__ == '__main__':
-    print("*** train-test-load script ***/n")
+    print("*** train-test-load script ***")
 
     # Initialize Parser for Arguments
     parser = ArgumentParser(description='Training Base Model ArgumentP')
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print("*** arguments: ***")
-    print(args, "/n")
+    print(args)
 
     # Initialize Resnet Model
     if args.model_type == 'custom':
