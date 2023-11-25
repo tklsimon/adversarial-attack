@@ -4,9 +4,6 @@ from torchvision.models import \
     ResNet50_Weights, resnet50, ResNet101_Weights, resnet101, \
     resnet152, ResNet152_Weights
 
-from .resnet import ResNet, Bottleneck, BasicBlock
-
-
 def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool = True) -> nn.Module:
     """
     get PyTorch default ResNet model
@@ -34,26 +31,4 @@ def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool =
         net = resnet152(weights=weights)
     in_ftr = net.fc.in_features  # Input dimension of fully connected (lc) layer
     net.fc = nn.Linear(in_ftr, num_classes, bias=True)  # Output dimension
-    return net
-
-
-def get_custom_resnet(layers: int = 18, num_classes: int = 10) -> nn.Module:
-    """
-    Implement a custom ResNet model
-
-    :param layers: number of layers of model
-    :param num_classes: output dimension
-    :return: pytorch nn Module
-    """
-    net: nn.Module = None
-    if layers == 18:
-        net = ResNet(BasicBlock, [2, 2, 2, 2], num_classes)
-    if layers == 34:
-        net = ResNet(BasicBlock, [3, 4, 6, 3], num_classes)
-    if layers == 50:
-        net = ResNet(Bottleneck, [3, 4, 6, 3], num_classes)
-    if layers == 101:
-        net = ResNet(Bottleneck, [3, 4, 23, 3], num_classes)
-    if layers == 152:
-        net = ResNet(Bottleneck, [3, 8, 36, 3], num_classes)
     return net

@@ -27,7 +27,6 @@ if __name__ == '__main__':
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
     parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
-    parser.add_argument('--model_type', default='', type=str, help='custom or default model')
 
     # train and test parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
@@ -49,10 +48,7 @@ if __name__ == '__main__':
     print()
 
     # initialize scenario
-    if args.model_type == 'custom':
-        model: Module = model_selector.get_custom_resnet(layers=args.layers)
-    else:
-        model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
+    model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
     train_set: Dataset = dataset.get_random_cifar10_dataset(True, download=args.load_data)
     test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=args.load_data)
 
