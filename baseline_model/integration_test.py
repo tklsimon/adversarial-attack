@@ -5,10 +5,10 @@ from torch.utils.data import Dataset
 
 from dataset import dataset
 from model import model_selector
+from scenario.scenario import Scenario
 from scenario.base_scenario import BaseScenario
 from scenario.fgsm_attack_scenario import FgsmAttackScenario
 from scenario.pgd_attack_scenario import PgdAttackScenario
-from scenario.scenario import Scenario
 
 
 class IntegrationTest(unittest.TestCase):

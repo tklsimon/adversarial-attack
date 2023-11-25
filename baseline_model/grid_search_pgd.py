@@ -17,22 +17,24 @@ from scenario.pgd_defense_scenario import PgdDefenseScenario  # noqa
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='PGD Grid Search Script')
-    # model parameters
+
+    # Model Parameters
     parser.add_argument('--lr', default=3e-4, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight_decay', default=1e-5, type=float, help='weight decay')
+    parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
+    parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
+    parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
+    parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
+    parser.add_argument('--model_type', default='', type=str, help='custom or default model')
+
     # train and test parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
     parser.add_argument('--test_val_ratio', default=0.99, type=float, help='ratio for train-eval split')
     parser.add_argument('--dry_run', default=False, action='store_true', help='will not train or test model')
     parser.add_argument('--load_data', default=False, action='store_true', help='download data if not available')
     # model parameter
-    parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
-    parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
-    parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
-    parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
-    parser.add_argument('--model_type', default='', type=str, help='custom or default model')
     # attack parameter
     parser.add_argument('--epsilon_start', default=0.00, type=float, help='PGD noise attack epsilon start')
     parser.add_argument('--epsilon_end', default=0.10, type=float, help='PGD noise attack epsilon end')

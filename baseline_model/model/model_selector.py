@@ -9,7 +9,7 @@ from .resnet import ResNet, Bottleneck, BasicBlock
 
 def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool = True) -> nn.Module:
     """
-    get PyTorch default model
+    get PyTorch default ResNet model
 
     :param layers: number of layers of model
     :param num_classes: output dimension
@@ -32,14 +32,14 @@ def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool =
     if layers == 152:
         weights = ResNet152_Weights.DEFAULT if pretrain else None
         net = resnet152(weights=weights)
-    in_ftr = net.fc.in_features  # input dimension of default output layer
-    net.fc = nn.Linear(in_ftr, num_classes, bias=True)  # modify output dimension
+    in_ftr = net.fc.in_features  # Input dimension of fully connected (lc) layer
+    net.fc = nn.Linear(in_ftr, num_classes, bias=True)  # Output dimension
     return net
 
 
 def get_custom_resnet(layers: int = 18, num_classes: int = 10) -> nn.Module:
     """
-    Get custom implementation of ResNet
+    Implement a custom ResNet model
 
     :param layers: number of layers of model
     :param num_classes: output dimension

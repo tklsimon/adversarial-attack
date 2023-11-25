@@ -1,6 +1,5 @@
-from typing import Tuple
-
 import torchvision.transforms as transforms
+from typing import Tuple
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10
 

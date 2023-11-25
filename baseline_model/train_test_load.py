@@ -1,19 +1,19 @@
-from model import model_selector
-from dataset import dataset
-from scenario.scenario import Scenario
-from scenario.base_scenario import BaseScenario
-
 from torch.nn import Module
 from torch.utils.data import Dataset
 from argparse import ArgumentParser
+
+from dataset import dataset
+from model import model_selector
+from scenario.scenario import Scenario
+from scenario.base_scenario import BaseScenario
 
 if __name__ == '__main__':
     print("*** train-test-load script ***/n")
 
     # Initialize Parser for Arguments
-    parser = ArgumentParser(description='PyTorch ResNet CIFAR10 Training')
+    parser = ArgumentParser(description='Training Base Model ArgumentP')
 
-    # Model parameters
+    # Model Parameters
     parser.add_argument('--lr', default=3e-4, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     train_set: Dataset = dataset.get_random_cifar10_dataset(True, download=args.load_data)
     test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=args.load_data)
 
-    # Initialize scenario
+    # Initialize Scenario
     scenario: Scenario = BaseScenario(load_path=args.load_path,
                                       save_path=args.save_path,
                                       batch_size=args.batch_size,

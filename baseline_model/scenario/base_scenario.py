@@ -1,24 +1,28 @@
 import os
-from abc import ABC
-from typing import Dict
-
 import torch
+
+from abc import ABC
+from tqdm import tqdm
+from typing import Dict
 from torch.nn import Module
 from torch.nn.modules.loss import _Loss
 from torch.utils.data import DataLoader, Subset
 from torch.utils.data import Dataset
-from tqdm import tqdm
 
 from .scenario import Scenario
 
 
 class BaseScenario(Scenario, ABC):
-    """Base implementation for Scenario, only contains basic training function for a baseline model"""
+    """
+    Implementation of Base Scenario
+    This class contains basic training function for baseline model
+    """
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
-        """Constructor of BaseScenario
+        """
+        Constructor of BaseScenario
 
         :param load_path: model weight's path under checkpoint folder
         :param save_path: path to save trained model's weight under checkpoint folder
@@ -43,46 +47,49 @@ class BaseScenario(Scenario, ABC):
     def __str__(self):
         return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
                "test_val_ratio=%.2E" % (
-                   self.model.__class__.__name__,
-                   self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.test_val_ratio)
+            self.model.__class__.__name__,
+            self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
+            self.test_val_ratio)
 
     def _init_data(self):
-        """initialize data, including train-validation split and load dataset"""
+        # Initialize data, including test and validation split, and loader
         print('==> Preparing data..')
 
-        """split into train-val set"""
-        # Calculate the number of samples for each split
+        # Split into test and val set
+        # Number of sample for test set
         num_samples = len(self.test_set)
         test_size = int(self.test_val_ratio * num_samples)
 
-        # Create indices for train and validation sets
+        # Indices of test and validation sets
         indices = list(range(num_samples))
         test_indices = indices[:test_size]
         val_indices = indices[test_size:]
 
-        # Create subsets for train and validation sets
+        # Split into test and validation sets
         test_dataset = Subset(self.test_set, test_indices)
         val_dataset = Subset(self.test_set, val_indices)
 
-        # split into validation and train set
+        # Train loader, test loader and validation loader
         self.train_loader = DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=2)
         self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=2)
+
         if self.test_val_ratio < 1:
             self.validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
         else:
             self.validation_loader = None
+
         print("no. of train batch: ", len(self.train_loader))
         print("no. of validation batch: ", len(self.validation_loader))
         print("no. of test batch: ", len(self.test_loader))
 
     def _init_model(self):
-        """initialize the model, such as loading weights"""
-        print('==> Initialize model..')
+        # initialize the model, such as loading weights from checkpoints
+        print('==> Initializing model..')
         self.model = self.model.to(self.device_name)
         if self.device_name == 'cuda':
             self.model = torch.nn.DataParallel(self.model)
             torch.backends.cudnn.benchmark = True
+        # Load checkpoint model if load_path is not NULL
         if self.load_path:
             print('==> Resuming from checkpoint ', self.load_path)
             augmented_path = os.path.join("./checkpoint", self.load_path)
@@ -100,10 +107,10 @@ class BaseScenario(Scenario, ABC):
         best_model_state_dict: dict = dict()
         best_epoch: int = 0
         for i in range(epoch):
-            print('==> Train Epoch: %d..' % i)
+            print('==> Training Epoch: %d..' % i)
 
-            """train"""
-            model.train()  # switch to train mode
+            # Training Part
+            model.train()  # Switch to train mode
             train_loss = 0
             correct = 0
             total = 0
@@ -125,16 +132,14 @@ class BaseScenario(Scenario, ABC):
                 correct += predicted.eq(targets).sum().item()
 
                 log_msg = 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                    train_loss / (batch_idx + 1), 100. * correct / total, correct, total
-                )
+                    train_loss / (batch_idx + 1), 100. * correct / total, correct, total)
 
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
-            """validation"""
+            # Validation Part
             val_loss: Dict = {}
             if self.validation_loader is not None and len(validation_loader) > 0:
                 val_loss = self.test(model, device_name, validation_loader, criterion)
-                # scheduler.step(val_loss['accuracy']))
             scheduler.step()
 
             if save_best:
@@ -147,12 +152,12 @@ class BaseScenario(Scenario, ABC):
                 else:
                     best_epoch = i
 
-        """save"""
+        # Save trained model to checkpoint
         if save_best:
             self.save(best_model_state_dict, self.save_path, str(self) + ", best epoch=" + str(best_epoch))
 
     def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> Dict:
-        model.eval()  # switch to evaluation mode
+        model.eval()  # Switch to evaluation mode
         loss_value = 0
         correct = 0
         total = 0
@@ -182,7 +187,7 @@ class BaseScenario(Scenario, ABC):
         :param save_path: where to save the model
         :param train_param: training parameter of the model
         """
-        print('==> Save to checkpoint..', save_path)
+        print('==> Saving to checkpoint..', save_path)
         augmented_path = os.path.join("./checkpoint", save_path)
         checkpoint_dir: str = os.path.dirname(augmented_path)
         if not os.path.exists(checkpoint_dir):
@@ -192,17 +197,20 @@ class BaseScenario(Scenario, ABC):
 
     def perform(self, epoch: int = 1) -> Dict:
         save_best = True if self.save_path else False
+
         optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
                                     weight_decay=self.weight_decay)
+
         scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, total_steps=len(self.train_loader),
                                                         epochs=epoch)
         criterion = torch.nn.CrossEntropyLoss()
 
-        """train, validation and save best model"""
+        # train, validation and save best model
         self.train(self.model, self.device_name, self.train_loader, self.validation_loader, optimizer, scheduler,
                    criterion, save_best, epoch)
-        """test"""
-        print('==> Test')
+
+        # Test Part
+        print('==> Testing')
         test_metric = self.test(self.model, self.device_name, self.test_loader, criterion)
 
         torch.cuda.empty_cache()

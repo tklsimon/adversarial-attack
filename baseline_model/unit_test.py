@@ -2,11 +2,14 @@ import unittest
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-from model import model_selector
 from dataset import dataset
+from model import model_selector
 
 
 class TestUnitTest(unittest.TestCase):
+    """
+    Perform Unit Test
+    """
 
     def test_model(self):
         for layer in [18, 34, 50, 101, 152]:
