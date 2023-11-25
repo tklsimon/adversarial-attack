@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     # train and test parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
-    parser.add_argument('--test_val_ratio', default=0.99, type=float, help='ratio for train-eval split')
+    parser.add_argument('--test_val_ratio', default=0.5, type=float, help='ratio for train-eval split')
     parser.add_argument('--dry_run', default=False, action='store_true', help='will not train or test model')
     parser.add_argument('--load_data', default=False, action='store_true', help='download data if not available')
     # model parameter

@@ -14,7 +14,7 @@ class Scenario(ABC):
     load model, repeat (train, validation), save model and test"""
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.99,
+                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
         """Constructor of Scenario
 

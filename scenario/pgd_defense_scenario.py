@@ -11,7 +11,7 @@ from .pgd_attack_scenario import PgdAttackScenario
 class PgdDefenseScenario(PgdAttackScenario):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.99,
+                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.03,
                  alpha: float = 0.007, noise_epochs: int = 10):
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,

@@ -3,7 +3,7 @@ import torch
 
 from abc import ABC
 from tqdm import tqdm
-from typing import Dict
+from typing import Dict, List
 
 from torch.nn import Module
 from torch.nn.modules.loss import _Loss
@@ -20,7 +20,7 @@ class BaseScenario(Scenario, ABC):
     """
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.99,
+                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
         """
         Constructor of BaseScenario
