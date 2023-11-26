@@ -31,6 +31,8 @@ def get_cifar10_dataset(is_train: bool, download: bool = False, transform: str =
         transform = get_normalize_transform()
     elif transform == 'dropout':
         transform = get_dropout_transform()
+    elif transform == 'blur':
+        transform = get_blur_transform()
     elif transform == 'random-blur':
         transform = get_random_blur_transform()
     elif transform == 'mask':
@@ -66,6 +68,13 @@ def get_dropout_transform() -> List:
     return [
         transforms.ToTensor(),
         MaskTransform(0.3)
+    ]
+
+
+def get_blur_transform() -> List:
+    return [
+        transforms.GaussianBlur(kernel_size=5, sigma=1.0),
+        transforms.ToTensor()
     ]
 
 
