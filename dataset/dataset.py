@@ -1,8 +1,10 @@
-import torch
-import torchvision.transforms as transforms
 from typing import Tuple, List
+
+import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10
+
+from dataset.custom_transform import MaskTransform
 
 
 def get_cifar10_targets() -> Tuple:
@@ -30,6 +32,8 @@ def get_cifar10_dataset(is_train: bool, download: bool = False, transform: str =
     elif transform == 'dropout':
         transform = get_dropout_transform()
     elif transform == 'random-blur':
+        transform = get_random_blur_transform()
+    elif transform == 'mask':
         transform = get_random_blur_transform()
     else:
         transform = get_default_transform()
@@ -61,7 +65,7 @@ def get_normalize_transform() -> List:
 def get_dropout_transform() -> List:
     return [
         transforms.ToTensor(),
-        torch.nn.Dropout(0.15)
+        MaskTransform(0.3)
     ]
 
 
