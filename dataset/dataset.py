@@ -29,6 +29,8 @@ def get_cifar10_dataset(is_train: bool, download: bool = False, transform: str =
         transform = get_normalize_transform()
     elif transform == 'dropout':
         transform = get_dropout_transform()
+    elif transform == 'random-blur':
+        transform = get_random_blur_transform()
     else:
         transform = get_default_transform()
     return CIFAR10(root='data', train=is_train, download=download, transform=transforms.Compose(transform))
@@ -60,4 +62,14 @@ def get_dropout_transform() -> List:
     return [
         transforms.ToTensor(),
         torch.nn.Dropout(0.15)
+    ]
+
+
+def get_random_blur_transform() -> List:
+    return [
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(32, padding=4),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+        transforms.GaussianBlur(kernel_size=5, sigma=1.0),
+        transforms.ToTensor()
     ]
