@@ -17,11 +17,11 @@ class TestUnitTest(unittest.TestCase):
             self.assertIsNotNone(model)
 
     def test_dataset(self):
-        train_dataset: Dataset = dataset.get_default_cifar10_dataset(True, True)
+        train_dataset: Dataset = dataset.get_cifar10_dataset(True, True)
         dl = DataLoader(train_dataset)
         self.assertEqual(len(dl), 50000)
 
-        test_dataset: Dataset = dataset.get_default_cifar10_dataset(False, True)
+        test_dataset: Dataset = dataset.get_cifar10_dataset(False, True)
         dl = DataLoader(test_dataset)
         self.assertEqual(len(dl), 10000)
 

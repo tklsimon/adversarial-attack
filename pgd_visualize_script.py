@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
 
-    data_set: Dataset = dataset.get_default_cifar10_dataset(is_train=args.is_train, download=args.load_data)
+    data_set: Dataset = dataset.get_cifar10_dataset(is_train=args.is_train, download=args.load_data)
 
     assert args.image_index_start >= 0
     assert args.image_index_end <= len(data_set)

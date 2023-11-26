@@ -15,8 +15,8 @@ class IntegrationTest(unittest.TestCase):
 
     def setUp(self):
         self.model: Module = model_selector.get_default_resnet()
-        self.train_set: Dataset = dataset.get_random_cifar10_dataset(True, download=True)
-        self.test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=True)
+        self.train_set: Dataset = dataset.get_cifar10_dataset(True, download=True)
+        self.test_set: Dataset = dataset.get_cifar10_dataset(False, download=True)
 
     def test_base_scenario(self):
         """

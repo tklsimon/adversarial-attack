@@ -38,10 +38,10 @@ if __name__ == '__main__':
     # initialize scenario
     model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
     if args.load_path:
-        train_set: Dataset = dataset.get_random_cifar10_dataset(True, download=args.load_data)
+        train_set: Dataset = dataset.get_cifar10_dataset(True, download=args.load_data)
     else:
-        train_set: Dataset = dataset.get_default_cifar10_dataset(True, download=args.load_data)
-    test_set: Dataset = dataset.get_default_cifar10_dataset(False, download=args.load_data)
+        train_set: Dataset = dataset.get_cifar10_dataset(True, download=args.load_data)
+    test_set: Dataset = dataset.get_cifar10_dataset(False, download=args.load_data)
     scenario: Scenario = RandomNoiseDefenseScenario(load_path=args.load_path,
                                                     save_path=args.save_path,
                                                     batch_size=args.batch_size,
