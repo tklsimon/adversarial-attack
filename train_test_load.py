@@ -39,7 +39,7 @@ if __name__ == '__main__':
     model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
 
     # Load Training Set and Test Set
-    train_set: Dataset = dataset.get_cifar10_dataset(True, download=args.load_data, transform="random-blur")
+    train_set: Dataset = dataset.get_cifar10_dataset(True, download=args.load_data, transform="random")
     test_set: Dataset = dataset.get_cifar10_dataset(False, download=args.load_data)
 
     # Initialize Scenario
