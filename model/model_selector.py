@@ -1,8 +1,12 @@
+import os
+
+import torch
 from torch import nn
 from torchvision.models import \
     resnet18, ResNet18_Weights, resnet34, ResNet34_Weights, \
     ResNet50_Weights, resnet50, ResNet101_Weights, resnet101, \
     resnet152, ResNet152_Weights
+
 
 def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool = True) -> nn.Module:
     """
@@ -32,3 +36,22 @@ def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool =
     in_ftr = net.fc.in_features  # Input dimension of fully connected (lc) layer
     net.fc = nn.Linear(in_ftr, num_classes, bias=True)  # Output dimension
     return net
+
+
+def get_pretrained_resnet(load_path: str, layers: int = 18, num_classes: int = 10) -> nn.Module:
+    net = get_default_resnet(layers, num_classes)
+
+    device_name: str = 'cuda' if torch.cuda.is_available() else 'cpu'
+    augmented_path: str = get_or_create_checkpoint_path(load_path)
+    checkpoint = torch.load(augmented_path, map_location=device_name)
+    net.load_state_dict(checkpoint)
+
+    return net
+
+
+def get_or_create_checkpoint_path(input_path) -> str:
+    augmented_path = os.path.join("checkpoint", input_path)
+    checkpoint_dir: str = os.path.dirname(augmented_path)
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+    return augmented_path

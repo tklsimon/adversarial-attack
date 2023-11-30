@@ -1,11 +1,17 @@
-from torch.nn import Module
-from torch.utils.data import Dataset
 from argparse import ArgumentParser
 
+import torch.nn
+from torch.nn import Module
+from torch.utils.data import Dataset
+
+from attack.fgsm import FGSM
+from attack.identity import Identity
+from attack.pgd import PGD
+from attack.random import RandomNoiseAttack
 from dataset import dataset
 from model import model_selector
-from scenario.scenario import Scenario
 from scenario.base_scenario import BaseScenario
+from scenario.scenario import Scenario
 
 if __name__ == '__main__':
     print("*** train-test-load script ***")
@@ -30,6 +36,13 @@ if __name__ == '__main__':
     parser.add_argument('--dry_run', default=False, action='store_true', help='will not train or test model')
     parser.add_argument('--load_data', default=False, action='store_true', help='download data if not available')
 
+    # Attack Parameter
+    parser.add_argument('--attack_type', default=None, type=str, help='attack type')
+    parser.add_argument('--attack_path', default=None, type=str, help='load attack model path')
+    parser.add_argument('--epsilon', default=0.03, type=float, help='PGD noise attack epsilon')
+    parser.add_argument('--alpha', default=0.007, type=float, help='PGD noise attack alpha')
+    parser.add_argument('--noise_epochs', default=10, type=int, help='no of epochs for PGD noise attack')
+
     args = parser.parse_args()
 
     print("*** arguments: ***")
@@ -42,6 +55,23 @@ if __name__ == '__main__':
     train_set: Dataset = dataset.get_cifar10_dataset(True, download=args.load_data, transform="random")
     test_set: Dataset = dataset.get_cifar10_dataset(False, download=args.load_data)
 
+    # Load attacker
+    attacker: torch.nn.Module = Identity()
+    if args.attack_type == "random":
+        attacker = RandomNoiseAttack()
+    elif args.attack_type == "FGSM":
+        if args.attack_path is not None:
+            attack_model: torch.nn.Module = model_selector.get_pretrained_resnet(args.attack_path, args.layers)
+        else:
+            attack_model: torch.nn.Module = model_selector.get_default_resnet(args.layers)
+        attacker = FGSM(attack_model, args.epsilon)
+    elif args.attack_type == "PGD":
+        if args.attack_path is not None:
+            attack_model: torch.nn.Module = model_selector.get_pretrained_resnet(args.attack_path, args.layers)
+        else:
+            attack_model: torch.nn.Module = model_selector.get_default_resnet(args.layers)
+        attacker = PGD(attack_model, args.epsilon, args.alpha, args.noise_epochs)
+
     # Initialize Scenario
     scenario: Scenario = BaseScenario(load_path=args.load_path,
                                       save_path=args.save_path,
@@ -51,6 +81,7 @@ if __name__ == '__main__':
                                       weight_decay=args.weight_decay,
                                       test_val_ratio=args.test_val_ratio,
                                       model=model,
+                                      attacker=attacker,
                                       train_set=train_set,
                                       test_set=test_set)
 
