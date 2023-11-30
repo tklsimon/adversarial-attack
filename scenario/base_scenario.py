@@ -19,7 +19,8 @@ class BaseScenario(Scenario, ABC):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
-                 model: nn.Module = None, train_set: Dataset = None, test_set: Dataset = None):
+                 model: nn.Module = None, attacker: nn.Module = None, train_set: Dataset = None,
+                 test_set: Dataset = None):
         """
         Constructor of BaseScenario
 
@@ -41,14 +42,16 @@ class BaseScenario(Scenario, ABC):
         # initialize objects
         self.device_name = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.previous_params: List = []
+        self.attacker: nn.Module = attacker
         self._init_data()
         self._init_model()
 
     def __str__(self):
-        return "Scenario=%s, model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, " \
-               "momentum=%.2E, test_val_ratio=%.2E" % (
+        return "Scenario=%s, model=%s, attacker=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, " \
+               "weigh_decay=%.2E, momentum=%.2E, test_val_ratio=%.2E" % (
                    self.__class__.__name__,
                    self.model.__class__.__name__,
+                   self.attacker,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
                    self.test_val_ratio)
 
@@ -169,7 +172,7 @@ class BaseScenario(Scenario, ABC):
             for batch_idx, (inputs, targets) in progress_bar:
                 inputs = inputs.to(device_name)
                 targets = targets.to(device_name)
-                perturbed_input = self.attack(model, inputs, targets)
+                perturbed_input = self.attack(inputs, targets)
                 outputs = model(perturbed_input)
                 loss = criterion(outputs, targets)
 
@@ -186,16 +189,17 @@ class BaseScenario(Scenario, ABC):
         return {'average test_loss': loss_value / len(data_loader), 'accuracy': correct / total,
                 'average similarity': similarities / total}
 
-    def attack(self, model: nn.Module, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    def attack(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         transform input to noise image
 
-        :param model: model to be attack
         :param inputs: original input
         :param targets: original target
         :return: input with noise
         """
-        return inputs.detach()
+        if self.attacker is None:
+            return inputs.detach()
+        return self.attacker(inputs, targets)
 
     def save(self, state_dict: dict, save_path: str, train_params: List):
         """Save model
@@ -247,6 +251,6 @@ def similarity(original_images: torch.Tensor, adversarial_images: torch.Tensor):
     images_flatten = original_images.reshape(original_images.shape[0], -1)
     adversarial_images_flatten = adversarial_images.reshape(adversarial_images.shape[0], -1)
 
-    cosine_similarities = F.cosine_similarity(torch.from_numpy(images_flatten),
-                                              torch.from_numpy(adversarial_images_flatten))
+    cosine_similarities = torch.nn.functional.cosine_similarity(torch.from_numpy(images_flatten),
+                                                                torch.from_numpy(adversarial_images_flatten))
     return cosine_similarities.sum().item()

@@ -8,3 +8,6 @@ class Identity(torch.nn.Module):
 
     def forward(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         return inputs.detach()
+
+    def __str__(self):
+        return "Attack=%s" % self.__name__

@@ -6,12 +6,16 @@ class PGD(torch.nn.Module):
     PGD
     """
 
-    def __init__(self, module: torch.nn.Module, epsilon: float, alpha: float, noise_epochs: int):
+    def __init__(self, module: torch.nn.Module, epsilon: float = 0.007, alpha: float = 0.03, noise_epochs: int = 10):
         super().__init__()
         self.module = module
         self.epsilon = epsilon
         self.alpha = alpha
         self.noise_epochs = noise_epochs
+
+    def __str__(self):
+        return "Attack=%s (epsilon=%.5f, alpha=%.5f, noise_epochs=%.5f)" % \
+               (self.__name__, self.epsilon, self.alpha, self.noise_epochs)
 
     def forward(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         with torch.enable_grad():

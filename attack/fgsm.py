@@ -6,10 +6,13 @@ class FGSM(torch.nn.Module):
     FGSM
     """
 
-    def __init__(self, module: torch.nn.Module, epsilon: float):
+    def __init__(self, module: torch.nn.Module, epsilon: float = 0.007):
         super().__init__()
         self.module = module
         self.epsilon = epsilon
+
+    def __str__(self):
+        return "Attack=%s (epsilon=%.2f)" % (self.__name__, self.epsilon)
 
     def forward(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         with torch.enable_grad():

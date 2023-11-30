@@ -5,10 +5,10 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .pgd_attack_scenario import PgdAttackScenario
+from .base_scenario import BaseScenario
 
 
-class SoftResponseDefenseScenario(PgdAttackScenario):
+class SoftResponseDefenseScenario(BaseScenario):
 
     def train(self, model: nn.Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
@@ -35,7 +35,7 @@ class SoftResponseDefenseScenario(PgdAttackScenario):
                 ori_outputs = ori_model(inputs)
                 softmax_ori_output = nn.Softmax(dim=1)(ori_outputs)
 
-                perturbed_inputs = self.attack(ori_model, inputs, targets)
+                perturbed_inputs = self.attack(inputs, targets)
                 outputs = model(perturbed_inputs)
 
                 loss = criterion(outputs, softmax_ori_output)
