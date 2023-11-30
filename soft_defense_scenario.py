@@ -1,8 +1,13 @@
 from argparse import ArgumentParser
 
+import torch
 from torch.nn import Module
 from torch.utils.data import Dataset
 
+from attack.fgsm import FGSM
+from attack.identity import Identity
+from attack.pgd import PGD
+from attack.random import RandomNoiseAttack
 from dataset import dataset
 from model import model_selector
 from scenario.scenario import Scenario  # noqa
@@ -26,21 +31,44 @@ if __name__ == '__main__':
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
     parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
-    # attack parameter
+    # Attack Parameter
+    parser.add_argument('--attack_type', default=None, type=str, help='attack type')
+    parser.add_argument('--attack_path', default=None, type=str, help='load attack model path')
     parser.add_argument('--epsilon', default=0.03, type=float, help='PGD noise attack epsilon')
     parser.add_argument('--alpha', default=0.007, type=float, help='PGD noise attack alpha')
     parser.add_argument('--noise_epochs', default=10, type=int, help='no of epochs for PGD noise attack')
     args = parser.parse_args()
 
-    print("*** pgd attack script ***")
+    print("*** soft defense script ***")
     print("*** arguments: ***")
     print(args)
     print()
 
     # initialize scenario
     model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
+
+    # Load Training Set and Test Set
     train_set: Dataset = dataset.get_cifar10_dataset(True, download=args.load_data)
     test_set: Dataset = dataset.get_cifar10_dataset(False, download=args.load_data)
+
+    # Load attacker
+    attacker: torch.nn.Module = Identity()
+    if args.attack_type == "random":
+        attacker = RandomNoiseAttack()
+    elif args.attack_type == "FGSM":
+        if args.attack_path is not None:
+            attack_model: torch.nn.Module = model_selector.get_pretrained_resnet(args.attack_path, args.layers)
+        else:
+            attack_model: torch.nn.Module = model_selector.get_default_resnet(args.layers)
+        attacker = FGSM(attack_model, args.epsilon)
+    elif args.attack_type == "PGD":
+        if args.attack_path is not None:
+            attack_model: torch.nn.Module = model_selector.get_pretrained_resnet(args.attack_path, args.layers)
+        else:
+            attack_model: torch.nn.Module = model_selector.get_default_resnet(args.layers)
+        attacker = PGD(attack_model, args.epsilon, args.alpha, args.noise_epochs)
+
+    # Initialize Scenario
     scenario: Scenario = SoftResponseDefenseScenario(load_path=args.load_path,
                                                      save_path=args.save_path,
                                                      batch_size=args.batch_size,
@@ -48,15 +76,21 @@ if __name__ == '__main__':
                                                      momentum=args.momentum,
                                                      weight_decay=args.weight_decay,
                                                      test_val_ratio=args.test_val_ratio,
-                                                     epsilon=args.epsilon,
-                                                     alpha=args.alpha,
-                                                     noise_epochs=args.noise_epochs,
                                                      model=model,
+                                                     attacker=attacker,
                                                      train_set=train_set,
                                                      test_set=test_set)
 
+    # Perform Training and Testing
     if not args.dry_run:
         if args.test_only:
+            print("Will perform testing process only.")
             scenario.perform(0)
         else:
+            print("Will perform training and testing process.")
             scenario.perform(args.train_epochs)
+    else:
+        print("Will perform dry run only.")
+        print("Dry run completed.")
+
+    print("Done.")
