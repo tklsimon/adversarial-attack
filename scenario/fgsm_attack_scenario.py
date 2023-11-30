@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
 
-from .attack_scenario import AttackScenario
+from .base_scenario import BaseScenario
 
 
-class FgsmAttackScenario(AttackScenario):
+class FgsmAttackScenario(BaseScenario):
     """
     Base implementation for Scenario, only contains basic training function for a baseline model
     """

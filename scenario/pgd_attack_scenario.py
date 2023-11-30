@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
 
-from .attack_scenario import AttackScenario
+from .base_scenario import BaseScenario
 
 
-class PgdAttackScenario(AttackScenario):
+class PgdAttackScenario(BaseScenario):
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
                  model: nn.Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.03,
