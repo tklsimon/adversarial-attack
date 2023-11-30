@@ -7,12 +7,12 @@ class FGSM(torch.nn.Module):
     """
 
     def __init__(self, module: torch.nn.Module, epsilon: float = 0.007):
-        super().__init__()
+        super(FGSM, self).__init__()
         self.module = module
         self.epsilon = epsilon
 
     def __str__(self):
-        return "Attack=%s (epsilon=%.2f)" % (self.__name__, self.epsilon)
+        return "Attack=%s (epsilon=%.2f)" % (self.__class__.__name__, self.epsilon)
 
     def forward(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         with torch.enable_grad():
@@ -25,13 +25,13 @@ class FGSM(torch.nn.Module):
             _inputs.requires_grad = True
 
             # Forward pass the data through the model
-            output = self.model(_inputs)
+            output = self.module(_inputs)
 
             # Calculate the loss
             loss: torch.Tensor = criterion(output, _targets)
 
             # Zero all existing gradients
-            self.model.zero_grad()
+            self.module.zero_grad()
 
             # Calculate gradients of model in backward pass
             loss.backward()
