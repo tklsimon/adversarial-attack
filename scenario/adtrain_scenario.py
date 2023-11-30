@@ -2,13 +2,13 @@ import copy
 from typing import Dict
 
 import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from .base_scenario import BaseScenario
 
 
-class PgdDefenseScenario(BaseScenario):
+class AdTrainScenario(BaseScenario):
     def train(self, model: nn.Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
         best_val_score = 0

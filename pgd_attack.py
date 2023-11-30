@@ -11,7 +11,7 @@ par_dir: str = os.path.dirname(os.getcwd())
 sys.path.append(par_dir)
 
 from scenario.scenario import Scenario  # noqa
-from scenario.pgd_defense_scenario import PgdDefenseScenario  # noqa
+from scenario.adtrain_scenario import AdTrainScenario  # noqa
 
 if __name__ == '__main__':
     print("*** pgd attack script ***")
@@ -54,19 +54,19 @@ if __name__ == '__main__':
     test_set: Dataset = dataset.get_cifar10_dataset(False, download=args.load_data)
 
     # Initialize Scenario
-    scenario: Scenario = PgdDefenseScenario(load_path=args.load_path,
-                                            save_path=args.save_path,
-                                            batch_size=args.batch_size,
-                                            lr=args.lr,
-                                            momentum=args.momentum,
-                                            weight_decay=args.weight_decay,
-                                            test_val_ratio=args.test_val_ratio,
-                                            epsilon=args.epsilon,
-                                            alpha=args.alpha,
-                                            noise_epochs=args.noise_epochs,
-                                            model=model,
-                                            train_set=train_set,
-                                            test_set=test_set)
+    scenario: Scenario = AdTrainScenario(load_path=args.load_path,
+                                         save_path=args.save_path,
+                                         batch_size=args.batch_size,
+                                         lr=args.lr,
+                                         momentum=args.momentum,
+                                         weight_decay=args.weight_decay,
+                                         test_val_ratio=args.test_val_ratio,
+                                         epsilon=args.epsilon,
+                                         alpha=args.alpha,
+                                         noise_epochs=args.noise_epochs,
+                                         model=model,
+                                         train_set=train_set,
+                                         test_set=test_set)
 
     # Perform Training and Testing
     if not args.dry_run:
