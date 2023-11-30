@@ -1,7 +1,7 @@
 import copy
 from typing import Dict
 
-from torch.nn import Module
+import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
@@ -12,7 +12,7 @@ class PgdDefenseScenario(PgdAttackScenario):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
-                 model: Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.03,
+                 model: nn.Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.03,
                  alpha: float = 0.007, noise_epochs: int = 10):
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
                          weight_decay=weight_decay, test_val_ratio=test_val_ratio,
@@ -27,12 +27,12 @@ class PgdDefenseScenario(PgdAttackScenario):
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
                    self.test_val_ratio, self.epsilon, self.alpha, self.noise_epochs)
 
-    def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
+    def train(self, model: nn.Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
         best_val_score = 0
         best_model_state_dict: dict = dict()
         best_epoch: int = 0
-        ori_model: Module = copy.deepcopy(model)
+        ori_model: nn.Module = copy.deepcopy(model)
         for i in range(epoch):
             print('==> Train Epoch: %d..' % i)
 

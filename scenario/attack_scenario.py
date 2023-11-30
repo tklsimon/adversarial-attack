@@ -1,10 +1,8 @@
 from typing import Dict
 
 import torch
-from torch import Tensor
 from torch.nn import Module
-from torch.nn.functional import cosine_similarity
-from torch.nn.modules.loss import _Loss
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -12,7 +10,7 @@ from .base_scenario import BaseScenario
 
 
 class AttackScenario(BaseScenario):
-    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> Dict:
+    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: Module) -> Dict:
         model.eval()  # switch to evaluation mode
         loss_value = 0
         correct = 0
@@ -40,7 +38,7 @@ class AttackScenario(BaseScenario):
         return {'average test_loss': loss_value / len(data_loader), 'accuracy': correct / total,
                 'average similarity': similarities / total}
 
-    def attack(self, model: Module, inputs: Tensor, targets: Tensor) -> Tensor:
+    def attack(self, model: Module, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         transform input to noise image
 
@@ -52,7 +50,7 @@ class AttackScenario(BaseScenario):
         return inputs.detach()
 
 
-def similarity(original_images: Tensor, adversarial_images: Tensor):
+def similarity(original_images: torch.Tensor, adversarial_images: torch.Tensor):
     # Move images back to CPU for visualization
     original_images = original_images.cpu().numpy()
     adversarial_images = adversarial_images.detach().cpu().numpy()
@@ -61,6 +59,6 @@ def similarity(original_images: Tensor, adversarial_images: Tensor):
     images_flatten = original_images.reshape(original_images.shape[0], -1)
     adversarial_images_flatten = adversarial_images.reshape(adversarial_images.shape[0], -1)
 
-    cosine_similarities = cosine_similarity(torch.from_numpy(images_flatten),
+    cosine_similarities = F.cosine_similarity(torch.from_numpy(images_flatten),
                                             torch.from_numpy(adversarial_images_flatten))
     return cosine_similarities.sum().item()

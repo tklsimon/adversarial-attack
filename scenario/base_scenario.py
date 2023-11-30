@@ -1,15 +1,12 @@
 import copy
 import os
-import torch
-
 from abc import ABC
-from tqdm import tqdm
 from typing import Dict, List
 
-from torch.nn import Module
-from torch.nn.modules.loss import _Loss
-from torch.utils.data import DataLoader, Subset
-from torch.utils.data import Dataset
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, Subset, Dataset
+from tqdm import tqdm
 
 from .scenario import Scenario
 
@@ -22,7 +19,7 @@ class BaseScenario(Scenario, ABC):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
-                 model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
+                 model: nn.Module = None, train_set: Dataset = None, test_set: Dataset = None):
         """
         Constructor of BaseScenario
 
@@ -105,7 +102,7 @@ class BaseScenario(Scenario, ABC):
                 for i in range(len(self.previous_params)):
                     print("==> [%2d] %s" % (i, self.previous_params[i]))
 
-    def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
+    def train(self, model: nn.Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
         best_val_score = 0
         best_model_state_dict: dict = dict()
@@ -161,7 +158,7 @@ class BaseScenario(Scenario, ABC):
             self.previous_params.append(str(self) + ", best epoch=" + str(best_epoch))
             self.save(best_model_state_dict, self.save_path, self.previous_params)
 
-    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> Dict:
+    def test(self, model: nn.Module, device_name: str, data_loader: DataLoader, criterion: nn.Module) -> Dict:
         model.eval()  # Switch to evaluation mode
         loss_value = 0
         correct = 0

@@ -1,8 +1,8 @@
 import copy
 from typing import Dict
 
-from torch.nn import Module, Softmax
-from torch.utils.data import DataLoader, Dataset
+import torch.nn as nn
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from .pgd_attack_scenario import PgdAttackScenario
@@ -10,12 +10,12 @@ from .pgd_attack_scenario import PgdAttackScenario
 
 class SoftResponseDefenseScenario(PgdAttackScenario):
 
-    def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
+    def train(self, model: nn.Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
         best_val_score = 0
         best_model_state_dict: dict = dict()
         best_epoch: int = 0
-        ori_model: Module = copy.deepcopy(model)
+        ori_model: nn.Module = copy.deepcopy(model)
         for i in range(epoch):
             print('==> Train Epoch: %d..' % i)
 
@@ -33,7 +33,7 @@ class SoftResponseDefenseScenario(PgdAttackScenario):
                 optimizer.zero_grad()
 
                 ori_outputs = ori_model(inputs)
-                softmax_ori_output = Softmax(dim=1)(ori_outputs)
+                softmax_ori_output = nn.Softmax(dim=1)(ori_outputs)
 
                 perturbed_inputs = self.attack(ori_model, inputs, targets)
                 outputs = model(perturbed_inputs)

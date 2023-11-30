@@ -5,7 +5,7 @@ https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 from abc import abstractmethod, ABC
 from typing import Dict
 
-from torch.nn import Module
+import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -15,7 +15,7 @@ class Scenario(ABC):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
-                 model: Module = None, train_set: Dataset = None, test_set: Dataset = None):
+                 model: nn.Module = None, train_set: Dataset = None, test_set: Dataset = None):
         """Constructor of Scenario
 
         :param load_path: model weight's path under checkpoint folder
@@ -30,7 +30,7 @@ class Scenario(ABC):
         :param test_set: test dataset
         """
         # set model
-        self.model: Module = model
+        self.model: nn.Module = model
 
         # model parameter
         self.device_name: str = ''

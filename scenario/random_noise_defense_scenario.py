@@ -1,17 +1,15 @@
-import copy
 from typing import Dict
 
 import torch
-from torch import Tensor
-from torch.nn import Module, Softmax
-from torch.utils.data import DataLoader, Dataset
+import torch.nn as nn
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from .pgd_attack_scenario import PgdAttackScenario
 
 
 class RandomNoiseDefenseScenario(PgdAttackScenario):
-    def train(self, model: Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
+    def train(self, model: nn.Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
         best_val_score = 0
         best_model_state_dict: dict = dict()
@@ -72,7 +70,7 @@ class RandomNoiseDefenseScenario(PgdAttackScenario):
             self.previous_params.append(str(self) + ", best epoch=" + str(best_epoch))
             self.save(best_model_state_dict, self.save_path, self.previous_params)
 
-    def attack(self, model: Module, inputs: Tensor, targets: Tensor) -> Tensor:
+    def attack(self, model: nn.Module, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         epsilon: float = self.epsilon
         variance: int = 3
         noise = torch.randn(*inputs.shape).to(self.device_name) * variance

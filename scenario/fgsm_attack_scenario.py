@@ -1,6 +1,5 @@
 import torch
-from torch import Tensor
-from torch.nn import Module, CrossEntropyLoss
+import torch.nn as nn
 from torch.utils.data import Dataset
 
 from .attack_scenario import AttackScenario
@@ -12,7 +11,7 @@ class FgsmAttackScenario(AttackScenario):
     """
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
                  momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
-                 model: Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.07):
+                 model: nn.Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.07):
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
                          weight_decay=weight_decay, test_val_ratio=test_val_ratio,
                          model=model, train_set=train_set, test_set=test_set)
@@ -26,16 +25,16 @@ class FgsmAttackScenario(AttackScenario):
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
                    self.test_val_ratio, self.epsilon)
 
-    def attack(self, model: Module, inputs: Tensor, targets: Tensor) -> Tensor:
+    def attack(self, model: nn.Module, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         return fgsm_attack(model, inputs, targets, self.epsilon)
 
 
-def fgsm_attack(model: Module, inputs: Tensor, targets: Tensor, epsilon: float) -> Tensor:
+def fgsm_attack(model: nn.Module, inputs: torch.Tensor, targets: torch.Tensor, epsilon: float) -> torch.Tensor:
     with torch.enable_grad():
         # initialize attack settings
         _inputs = inputs.clone().detach()
         _targets = targets.clone().detach()
-        criterion = CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss()
 
         # enable grad for inputs
         _inputs.requires_grad = True
@@ -44,7 +43,7 @@ def fgsm_attack(model: Module, inputs: Tensor, targets: Tensor, epsilon: float) 
         output = model(_inputs)
 
         # Calculate the loss
-        loss: Tensor = criterion(output, _targets)
+        loss: torch.Tensor = criterion(output, _targets)
 
         # Zero all existing gradients
         model.zero_grad()
