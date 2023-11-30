@@ -28,7 +28,8 @@ class AdTrainScenario(BaseScenario):
 
             for batch_idx, (inputs, targets) in progress_bar:
                 for is_attack in [False, True]:
-                    inputs, targets = inputs.to(device_name), targets.to(device_name)
+                    inputs = inputs.to(device_name)
+                    targets = targets.to(device_name)
 
                     optimizer.zero_grad()
 
