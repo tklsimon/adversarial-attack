@@ -44,7 +44,9 @@ def get_pretrained_resnet(load_path: str, layers: int = 18, num_classes: int = 1
     device_name: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     augmented_path: str = get_or_create_checkpoint_path(load_path)
     checkpoint = torch.load(augmented_path, map_location=device_name)
-    net.load_state_dict(checkpoint)
+    if device_name == 'cuda':
+        net = torch.nn.DataParallel(net)
+    net.load_state_dict(checkpoint['state_dict'])
 
     return net
 
