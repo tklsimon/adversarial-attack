@@ -51,7 +51,7 @@ class BaseScenario(Scenario, ABC):
                "weigh_decay=%.2E, momentum=%.2E, test_val_ratio=%.2E" % (
                    self.__class__.__name__,
                    self.model.__class__.__name__,
-                   self.attacker,
+                   str(self.attacker),
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
                    self.test_val_ratio)
 
@@ -122,10 +122,13 @@ class BaseScenario(Scenario, ABC):
             progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
 
             for batch_idx, (inputs, targets) in progress_bar:
-                inputs, targets = inputs.to(device_name), targets.to(device_name)
+                inputs = inputs.to(device_name)
+                targets = targets.to(device_name)
+
+                perturbed_inputs = self.attack(inputs, targets)
 
                 optimizer.zero_grad()
-                outputs = model(inputs)
+                outputs = model(perturbed_inputs)
                 loss = criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()

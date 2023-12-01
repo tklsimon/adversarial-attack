@@ -10,11 +10,11 @@ from attack.pgd import PGD
 from attack.random import RandomNoiseAttack
 from dataset import dataset
 from model import model_selector
-from scenario.base_scenario import BaseScenario
+from scenario.adtrain_scenario import AdTrainScenario
 from scenario.scenario import Scenario
 
 if __name__ == '__main__':
-    print("*** train-test-load script ***")
+    print("*** adversarial training script ***")
 
     # Initialize Parser for Arguments
     parser = ArgumentParser(description='Training Base Model ArgumentP')
@@ -73,7 +73,7 @@ if __name__ == '__main__':
         attacker = PGD(attack_model, args.epsilon, args.alpha, args.noise_epochs)
 
     # Initialize Scenario
-    scenario: Scenario = BaseScenario(load_path=args.load_path,
+    scenario: Scenario = AdTrainScenario(load_path=args.load_path,
                                       save_path=args.save_path,
                                       batch_size=args.batch_size,
                                       lr=args.lr,

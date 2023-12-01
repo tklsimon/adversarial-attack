@@ -55,13 +55,13 @@ if __name__ == '__main__':
     attacker: torch.nn.Module = Identity()
     if args.attack_type == "random":
         attacker = RandomNoiseAttack()
-    elif args.attack_type == "FGSM":
+    elif args.attack_type == "FGSM" or args.attack_type == "fgsm":
         if args.attack_path is not None:
             attack_model: torch.nn.Module = model_selector.get_pretrained_resnet(args.attack_path, args.layers)
         else:
             attack_model: torch.nn.Module = model_selector.get_default_resnet(args.layers)
         attacker = FGSM(attack_model, args.epsilon)
-    elif args.attack_type == "PGD":
+    elif args.attack_type == "PGD" or args.attack_type == "pgd":
         if args.attack_path is not None:
             attack_model: torch.nn.Module = model_selector.get_pretrained_resnet(args.attack_path, args.layers)
         else:
