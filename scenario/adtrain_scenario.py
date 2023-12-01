@@ -34,7 +34,7 @@ class AdTrainScenario(BaseScenario):
                     optimizer.zero_grad()
 
                     if is_attack:
-                        perturbed_inputs = self.attack(ori_model, inputs, targets)
+                        perturbed_inputs = self.attack(inputs, targets)
                         outputs = model(perturbed_inputs)
                     else:
                         outputs = model(inputs)
