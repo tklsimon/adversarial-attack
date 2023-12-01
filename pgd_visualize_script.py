@@ -6,9 +6,9 @@ from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import Dataset, Subset, DataLoader
 
+from attack.pgd import PGD
 from dataset import dataset
 from model import model_selector
-from scenario.pgd_attack_scenario import pgd_attack
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Visualization Script')
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     dataloader = DataLoader(subset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-    augmented_path = os.path.join("./img", args.img_path)
+    augmented_path = os.path.join("img", args.img_path)
     img_dir: str = os.path.dirname(augmented_path)
     if not os.path.exists(img_dir):
         os.makedirs(img_dir)
@@ -60,7 +60,8 @@ if __name__ == '__main__':
         pil_image = transforms.ToPILImage()(_input)
         pil_image.save('img/ori.jpg')
 
-        blurred_tensor: Tensor = pgd_attack(model, inputs, labels, args.noise_epochs, args.epsilon, args.alpha)
+        attacker: Module = PGD(model, args.epsilon, args.alpha, args.noise_epochs)
+        blurred_tensor: Tensor = attacker(inputs, labels)
         _blurred_tensor = blurred_tensor[1]
 
         blurred_image = transforms.ToPILImage()(_blurred_tensor)
