@@ -11,7 +11,7 @@ class RandomNoiseAttack(torch.nn.Module):
         self.epsilon = epsilon
 
     def __str__(self):
-        return "Attack=%s (epsilon=%.5f)" % (self.__name__, self.epsilon)
+        return "Attack=%s (epsilon=%.5f)" % (self.__class__.__name__, self.epsilon)
 
     def forward(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         epsilon: float = self.epsilon

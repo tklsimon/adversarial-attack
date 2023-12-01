@@ -10,4 +10,4 @@ class Identity(torch.nn.Module):
         return inputs.detach()
 
     def __str__(self):
-        return "Attack=%s" % self.__name__
+        return "Attack=%s" % self.__class__.__name__
