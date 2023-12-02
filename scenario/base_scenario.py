@@ -90,8 +90,8 @@ class BaseScenario(Scenario, ABC):
         # initialize the model, such as loading weights from checkpoints
         print('==> Initializing model..')
         self.model = self.model.to(self.device_name)
+        self.model = torch.nn.DataParallel(self.model)
         if self.device_name == 'cuda':
-            self.model = torch.nn.DataParallel(self.model)
             torch.backends.cudnn.benchmark = True
         # Load checkpoint model if load_path is not NULL
         if self.load_path:
