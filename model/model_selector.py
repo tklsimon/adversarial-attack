@@ -38,7 +38,7 @@ def get_default_resnet(layers: int = 18, num_classes: int = 10, pretrain: bool =
     return net
 
 
-def get_pretrained_resnet(load_path: str, layers: int = 18, num_classes: int = 10) -> nn.Module:
+def get_checkpoint_resnet(load_path: str, layers: int = 18, num_classes: int = 10) -> nn.Module:
     net = get_default_resnet(layers, num_classes)
 
     device_name: str = 'cuda' if torch.cuda.is_available() else 'cpu'
