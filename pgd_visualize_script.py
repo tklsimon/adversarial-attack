@@ -42,7 +42,10 @@ if __name__ == '__main__':
     print(args)
     print()
 
-    model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.pretrain_model)
+    if args.load_path is not None:
+        model: Module = model_selector.get_checkpoint_resnet(args.load_path, layers=args.layers)
+    else:
+        model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.pretrain_model)
 
     data_set: Dataset = dataset.get_cifar10_dataset(is_train=args.is_train, download=args.load_data)
 
@@ -65,11 +68,13 @@ if __name__ == '__main__':
     for (inputs, labels) in dataloader:
         blurred_tensor: Tensor = attacker(inputs, labels)
         noise_tensor: Tensor = (blurred_tensor - inputs) / args.alpha
-        prediction: Tensor = model(blurred_tensor)
+        normal_pred: Tensor = model(inputs)
+        adv_pred: Tensor = model(blurred_tensor)
 
         for _ in range(inputs.shape[0]):
             true_label: str = dataset.get_cifar10_targets()[labels[_].item()]
-            pred_label: str = dataset.get_cifar10_targets()[torch.argmax(prediction[_]).item()]
+            adv_pred_label: str = dataset.get_cifar10_targets()[torch.argmax(adv_pred[_]).item()]
+            normal_pred_label: str = dataset.get_cifar10_targets()[torch.argmax(normal_pred[_]).item()]
             save_tensor_as_img(inputs[_], 'img/ori' + str(_) + '_' + true_label + '.jpg')
-            save_tensor_as_img(blurred_tensor[_], 'img/blurred' + str(_) + '_' + pred_label + '.jpg')
-            save_tensor_as_img(noise_tensor[_], 'img/noise' + str(_) + '.jpg')
+            save_tensor_as_img(blurred_tensor[_], 'img/blurred' + str(_) + '_' + adv_pred_label + '.jpg')
+            save_tensor_as_img(noise_tensor[_], 'img/noise' + str(_) + '_' + normal_pred_label + '.jpg')
