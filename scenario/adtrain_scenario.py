@@ -1,4 +1,3 @@
-import copy
 from typing import Dict
 
 import torch.nn as nn
@@ -14,7 +13,6 @@ class AdTrainScenario(BaseScenario):
         best_val_score = 0
         best_model_state_dict: dict = dict()
         best_epoch: int = 0
-        ori_model: nn.Module = copy.deepcopy(model)
         for i in range(epoch):
             print('==> Train Epoch: %d..' % i)
 
@@ -56,7 +54,7 @@ class AdTrainScenario(BaseScenario):
                         progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
             """validation"""
-            val_loss: Dict
+            val_loss: Dict = {}
             if self.validation_loader is not None and len(validation_loader) > 0:
                 val_loss = self.test(model, device_name, validation_loader, criterion)
                 # scheduler.step(eval_loss))
