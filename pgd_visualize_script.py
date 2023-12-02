@@ -14,7 +14,7 @@ if __name__ == '__main__':
     parser = ArgumentParser(description='Visualization Script')
     # model parameter
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
-    parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
+    parser.add_argument('--pretrain_model', default=True, action='store_false', help='load online pretrained parameters')
     parser.add_argument('--batch_size', default=4, type=int, help='batch size')
     # train and test parameters
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     print(args)
     print()
 
-    model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
+    model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.pretrain_model)
 
     data_set: Dataset = dataset.get_cifar10_dataset(is_train=args.is_train, download=args.load_data)
 

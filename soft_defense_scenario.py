@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
-    parser.add_argument('--clean_model', default=True, action='store_false', help='load online pretrained parameters')
+    parser.add_argument('--pretrain_model', default=True, action='store_false', help='load online pretrained parameters')
     # Attack Parameter
     parser.add_argument('--attack_type', default=None, type=str, help='attack type')
     parser.add_argument('--attack_path', default=None, type=str, help='load attack model path')
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     print()
 
     # initialize scenario
-    model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.clean_model)
+    model: Module = model_selector.get_default_resnet(layers=args.layers, pretrain=args.pretrain_model)
 
     # Load Training Set and Test Set
     train_set: Dataset = dataset.get_cifar10_dataset(True, download=args.load_data)
