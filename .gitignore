@@ -1,5 +1,6 @@
 /.idea/**
 data/**
 checkpoint/**
+/img/**
 
 /.ipynb_checkpoints
