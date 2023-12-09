@@ -40,11 +40,11 @@ To train a base module, run the script `train_test_load.py`, with options:
 - save_path: path with filename to save checkpoint based on best validate score
 - load_data: download dataset if not exists
 
-python ./baseline_model/train_test_load.py --load_data --dry_run
+python train_test_load.py --load_data --dry_run
 
-python ./baseline_model/train_test_load.py --train_epochs=20 --save_path="resnet18/best.pth"
+python train_test_load.py --train_epochs=20 --save_path="resnet18/best.pth"
 
-python ./baseline_model/train_test_load.py --load_path="resnet18/best.pth" --test_only
+python train_test_load.py --load_path="resnet18/best.pth" --test_only
 
 ## Documentation
 
