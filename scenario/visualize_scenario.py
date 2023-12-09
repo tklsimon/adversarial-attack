@@ -1,31 +1,21 @@
-import os
-from abc import ABC
-
 import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 from torch.nn import Module
-from torch.nn.modules.loss import _Loss
-from torch.utils.data import Dataset, DataLoader, Subset
-from tqdm import tqdm
-import matplotlib.pyplot as plt
-import numpy as np
-from torchvision.transforms.functional import normalize
+from torch.utils.data import Dataset, DataLoader
+from typing import Dict
 
-
-
-from .scenario import Scenario
 from .base_scenario import BaseScenario
 
 
 class visualizeScenario(BaseScenario):
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, train_eval_ratio: float = 0.99,
+                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.99,
                  model: Module = None, train_set: Dataset = None, test_set: Dataset = None, epsilon: float = 0.03,
                  alpha: float = 0.007, num_iter: int = 10, attack_mode: str = None):
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
-                         weight_decay=weight_decay, train_eval_ratio=train_eval_ratio,
+                         weight_decay=weight_decay, test_val_ratio=test_val_ratio,
                          model=model, train_set=train_set, test_set=test_set)
         self.epsilon = epsilon
         self.alpha = alpha
@@ -34,27 +24,24 @@ class visualizeScenario(BaseScenario):
 
     def __str__(self):
         return "model=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, weigh_decay=%.2E, momentum=%.2E, " \
-               "train_eval_ratio=%.2E, epsilon=%.2E, alpha=%.2E, num_iter=%d" % (
+               "test_val_ratio=%.2E, epsilon=%.2E, alpha=%.2E, num_iter=%d" % (
                    self.model.__class__.__name__,
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.train_eval_ratio, self. epsilon, self.alpha, self.num_iter
+                   self.test_val_ratio, self.epsilon, self.alpha, self.num_iter
                )
-    
-    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
+
+    def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: nn.Module) -> Dict:
         model.eval()  # switch to evaluation mode
         data_iter = iter(data_loader)
         images, labels = next(data_iter)
         images, labels = images.to(device_name), labels.to(device_name)
 
-        
-        
         # Perform the fgsm/PGD attack
         if self.attack_mode == 'fgsm':
             adversarial_images = fgsm_attack(images, self.epsilon, labels, model)
         else:
             adversarial_images = pgd_attack(images, labels, self.model, self.epsilon, self.alpha,
-                                          self.num_iter)
-
+                                            self.num_iter)
 
         # Move images back to CPU for visualization
         images = images.cpu().numpy()
@@ -68,12 +55,13 @@ class visualizeScenario(BaseScenario):
         images_flatten = original_images.reshape(original_images.shape[0], -1)
         adversarial_images_flatten = adversarial_images.reshape(adversarial_images.shape[0], -1)
 
-        cosine_similarity = F.cosine_similarity(torch.from_numpy(images_flatten), torch.from_numpy(adversarial_images_flatten))
+        cosine_similarity = F.cosine_similarity(torch.from_numpy(images_flatten),
+                                                torch.from_numpy(adversarial_images_flatten))
         cosine_similarity_mean = cosine_similarity.mean().item()
         print('Average Cosine Similarity:', cosine_similarity_mean)
 
-        
-        
+        return {'average similarity': cosine_similarity_mean}
+
     '''
     def test(self, model: Module, device_name: str, data_loader: DataLoader, criterion: _Loss) -> float:
         model.eval()  # switch to evaluation mode
@@ -115,9 +103,9 @@ class visualizeScenario(BaseScenario):
         
         
         plt.show()  
-      '''  
-        
-        
+      '''
+
+
 def pgd_attack(inputs: Tensor, targets, model: Module, epsilon: float, alpha: float, num_iter: int) -> Tensor:
     # Set up loss for iteration maximising loss
     criterion = nn.CrossEntropyLoss()
@@ -142,7 +130,6 @@ def pgd_attack(inputs: Tensor, targets, model: Module, epsilon: float, alpha: fl
         # output perturbed image for next iteration
         perturbing_input = torch.clamp(perturbing_input.data + eta, min=0, max=1).detach()
     return perturbing_input
-
 
 
 def fgsm_attack(inputs: Tensor, epsilon: float, labels, model: Module) -> Tensor:
