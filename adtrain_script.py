@@ -27,7 +27,8 @@ if __name__ == '__main__':
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
-    parser.add_argument('--pretrain_model', default=True, action='store_false', help='load online pretrained parameters')
+    parser.add_argument('--pretrain_model', default=True, action='store_false',
+                        help='load online pretrained parameters')
 
     # Train and Test Parameters
     parser.add_argument('--train_epochs', default=10, type=int, help='no. of epochs for train')
@@ -74,16 +75,16 @@ if __name__ == '__main__':
 
     # Initialize Scenario
     scenario: Scenario = AdTrainScenario(load_path=args.load_path,
-                                      save_path=args.save_path,
-                                      batch_size=args.batch_size,
-                                      lr=args.lr,
-                                      momentum=args.momentum,
-                                      weight_decay=args.weight_decay,
-                                      test_val_ratio=args.test_val_ratio,
-                                      model=model,
-                                      attacker=attacker,
-                                      train_set=train_set,
-                                      test_set=test_set)
+                                         save_path=args.save_path,
+                                         batch_size=args.batch_size,
+                                         lr=args.lr,
+                                         momentum=args.momentum,
+                                         weight_decay=args.weight_decay,
+                                         test_val_ratio=args.test_val_ratio,
+                                         model=model,
+                                         attacker=attacker,
+                                         train_set=train_set,
+                                         test_set=test_set)
 
     # Perform Training and Testing
     if not args.dry_run:
