@@ -24,6 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight_decay', default=1e-5, type=float, help='weight decay')
+    parser.add_argument('--soft_label', default=0.0, type=float, help='label smoothing factor')
     parser.add_argument('--load_path', default=None, type=str, help='load from checkpoint')
     parser.add_argument('--save_path', default=None, type=str, help='save checkpoint')
     parser.add_argument('--layers', default=18, type=int, help='no. of layers in model')
@@ -80,6 +81,7 @@ if __name__ == '__main__':
                                       momentum=args.momentum,
                                       weight_decay=args.weight_decay,
                                       test_val_ratio=args.test_val_ratio,
+                                      soft_label=args.soft_label,
                                       model=model,
                                       attacker=attacker,
                                       train_set=train_set,

@@ -14,7 +14,7 @@ class Scenario(ABC):
     load model, repeat (train, validation), save model and test"""
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
+                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5, soft_label: float = 0.0,
                  model: nn.Module = None, train_set: Dataset = None, test_set: Dataset = None):
         """Constructor of Scenario
 
@@ -25,6 +25,7 @@ class Scenario(ABC):
         :param momentum: optimizer settings
         :param weight_decay: optimizer settings
         :param test_val_ratio: ratio of train dataset : validation dataset.  If set to 1, then train with all data
+        :param soft_label: label smoothing factor
         :param model: model to be trained / tested
         :param train_set: train dataset
         :param test_set: test dataset
@@ -41,6 +42,7 @@ class Scenario(ABC):
         self.momentum: float = momentum
         self.weight_decay: float = weight_decay
         self.test_val_ratio: float = test_val_ratio
+        self.soft_label: float = soft_label
 
         # train and test parameter
         self.train_set: Dataset = train_set

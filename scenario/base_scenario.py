@@ -18,7 +18,7 @@ class BaseScenario(Scenario, ABC):
     """
 
     def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
-                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5,
+                 momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5, soft_label: float = 0.0,
                  model: nn.Module = None, attacker: nn.Module = None, train_set: Dataset = None,
                  test_set: Dataset = None):
         """
@@ -31,12 +31,13 @@ class BaseScenario(Scenario, ABC):
         :param momentum: optimizer settings
         :param weight_decay: optimizer settings
         :param test_val_ratio: ratio of test dataset : validation dataset.  If set to 1, then all data are for testing
+        :param soft_label: label smoothing factor
         :param model: model to be trained / tested
         :param train_set: train dataset
         :param test_set: test dataset
         """
         super().__init__(load_path=load_path, save_path=save_path, lr=lr, batch_size=batch_size, momentum=momentum,
-                         weight_decay=weight_decay, test_val_ratio=test_val_ratio,
+                         weight_decay=weight_decay, test_val_ratio=test_val_ratio, soft_label=soft_label,
                          model=model, train_set=train_set, test_set=test_set)
 
         # initialize objects
@@ -48,12 +49,12 @@ class BaseScenario(Scenario, ABC):
 
     def __str__(self):
         return "Scenario=%s, model=%s, attacker=%s, load_path=%s, save_path=%s, batch_size=%d, lr=%.2E, " \
-               "weigh_decay=%.2E, momentum=%.2E, test_val_ratio=%.2E" % (
+               "weigh_decay=%.2E, momentum=%.2E, test_val_ratio=%.2E, soft_label=%.2E" % (
                    self.__class__.__name__,
                    self.model.__class__.__name__,
                    str(self.attacker),
                    self.load_path, self.save_path, self.batch_size, self.lr, self.weight_decay, self.momentum,
-                   self.test_val_ratio)
+                   self.test_val_ratio, self.soft_label)
 
     def _init_data(self):
         # Initialize data, including test and validation split, and loader
@@ -224,7 +225,7 @@ class BaseScenario(Scenario, ABC):
 
         scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, total_steps=len(self.train_loader),
                                                         epochs=epoch)
-        criterion = torch.nn.CrossEntropyLoss()
+        criterion = torch.nn.CrossEntropyLoss(label_smoothing=self.soft_label)
 
         # train, validation and save best model
         self.train(self.model, self.device_name, self.train_loader, self.validation_loader, optimizer, scheduler,
