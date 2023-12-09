@@ -16,20 +16,23 @@ In this project, our focus will be on studying both adversarial attacks and defe
 
 We divided the code into 5 modules. They serve the below purposes:
 - train_test_load.py: Training and validate base model
-- fgsm_attack.py or pgd_attack.py: Attacking the trained model
-- xxxxxx.py: Use defence mechanisms to train a robust model
-- pdg_visualize_script.py: Visualization for images and graphs
+- adtrain_script.py: Use defence mechanisms to train a robust model
 - unit_test.py: Test cases to perform unit tests
+- integration_test.py: Test case for running actual scenario
+- pdg_visualize_script.py: Visualization for images and graphs
+
 
 
 Submodules:
 - dataset: To load CIFAR-10 dataset
 - model: Get PyTorch default model or implement custom ResNet
+- attack: implementation for attack like Random Noise, FGSM and PGD
 - scenario: a generalized script which done the data initialization, model parameter loading and exact procedure.
 
 There are 2 folders created and not included in source code:
 - data, the folder to store CIFAR10 data
 - checkpoint, the folder to store model checkpoints.
+- img, the folder to store images for visualization purpose
 
 ## Technical Description
 
