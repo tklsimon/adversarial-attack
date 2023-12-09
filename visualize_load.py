@@ -15,7 +15,7 @@ from scenario.scenario import Scenario  # noqa
 from scenario.visualize_scenario import visualizeScenario  # noqa
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='PGD Attack Test')
+    parser = ArgumentParser(description='Visualization Load Script')
     # model parameters
     parser.add_argument('--lr', default=3e-4, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
