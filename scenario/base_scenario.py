@@ -17,7 +17,7 @@ class BaseScenario(Scenario, ABC):
     This class contains basic training function for baseline model
     """
 
-    def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 4,
+    def __init__(self, load_path: str = None, save_path: str = None, lr: float = 0.001, batch_size: int = 64,
                  momentum: float = 0.9, weight_decay: float = 0, test_val_ratio: float = 0.5, soft_label: float = 0.0,
                  model: nn.Module = None, attacker: nn.Module = None, train_set: Dataset = None,
                  test_set: Dataset = None):
