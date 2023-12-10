@@ -17,7 +17,7 @@ if __name__ == '__main__':
     print("*** adversarial training script ***")
 
     # Initialize Parser for Arguments
-    parser = ArgumentParser(description='Training Base Model ArgumentP')
+    parser = ArgumentParser(description='Training Base Model Argument')
 
     # Model Parameters
     parser.add_argument('--lr', default=3e-4, type=float, help='learning rate')
