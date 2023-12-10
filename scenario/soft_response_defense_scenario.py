@@ -15,13 +15,13 @@ class SoftResponseDefenseScenario(BaseScenario):
         best_val_score = 0
         best_model_state_dict: dict = dict()
         best_epoch: int = 0
-        ori_model: nn.Module = copy.deepcopy(model)
+        teacher_model: nn.Module = copy.deepcopy(model)
         for i in range(epoch):
             print('==> Train Epoch: %d..' % i)
 
             """train"""
             model.train()  # switch to train mode
-            ori_model.eval()
+            teacher_model.eval()
             train_loss = 0
             correct = 0
             total = 0
@@ -32,13 +32,13 @@ class SoftResponseDefenseScenario(BaseScenario):
                 inputs, targets = inputs.to(device_name), targets.to(device_name)
                 optimizer.zero_grad()
 
-                ori_outputs = ori_model(inputs)
-                softmax_ori_output = nn.Softmax(dim=1)(ori_outputs)
+                teacher_outputs = teacher_model(inputs)
+                softmax_teacher_output = nn.Softmax(dim=1)(teacher_outputs)
 
                 perturbed_inputs = self.attack(inputs, targets)
                 outputs = model(perturbed_inputs)
 
-                loss = criterion(outputs, softmax_ori_output)
+                loss = criterion(outputs, softmax_teacher_output)
                 loss.backward()
                 optimizer.step()
 
