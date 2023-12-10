@@ -12,16 +12,26 @@ To counter these attacks, various techniques have been developed to defend again
 In this project, our focus will be on studying both adversarial attacks and defence mechanisms using the CIFAR-10 dataset as our benchmark dataset and ResNet-50 serves as our base model.
 
 
+## Setup Environment
+
+To setup the environment in conda, perform the below commands:
+
+```commandline
+# add conda channel to download package
+conda config --add channels conda-forge  
+# create environment from requirements.txt
+conda create --name adtrain_env --file requirements.txt 
+```
+
 ## Code Structure
 
 We divided the code into 5 modules. They serve the below purposes:
 - train_test_load.py: Training and validate base model
 - adtrain_script.py: Use defence mechanisms to train a robust model
+- kndist_script.py: Use knowledge distillation to train a robust model
 - unit_test.py: Test cases to perform unit tests
 - integration_test.py: Test case for running actual scenario
 - pdg_visualize_script.py: Visualization for images and graphs
-
-
 
 Submodules:
 - dataset: To load CIFAR-10 dataset
@@ -43,11 +53,13 @@ To train a base module, run the script `train_test_load.py`, with options:
 - save_path: path with filename to save checkpoint based on best validate score
 - load_data: download dataset if not exists
 
-python train_test_load.py --load_data --dry_run
+Example command: 
 
-python train_test_load.py --train_epochs=20 --save_path="resnet18/best.pth"
-
-python train_test_load.py --load_path="resnet18/best.pth" --test_only
+```python
+python train_test_load.py --load_data --dry_run # download dataset and perform dry-run
+python train_test_load.py --train_epochs=20 --save_path="resnet18/best.pth" # train and save model
+python train_test_load.py --load_path="resnet18/best.pth" --test_only # load and test model 
+```
 
 ## Documentation
 
