@@ -40,8 +40,8 @@ class SoftResponseDefenseScenario(BaseScenario):
 
                 loss = criterion(outputs, softmax_ori_output)
                 loss.backward()
-
                 optimizer.step()
+
                 train_loss += loss.item()
                 _, predicted = outputs.max(1)
                 total += targets.size(0)
@@ -54,7 +54,7 @@ class SoftResponseDefenseScenario(BaseScenario):
                 progress_bar.set_description('[batch %2d]     %s' % (batch_idx, log_msg))
 
             """validation"""
-            val_loss: Dict
+            val_loss: Dict = {}
             if self.validation_loader is not None and len(validation_loader) > 0:
                 val_loss = self.test(model, device_name, validation_loader, criterion)
                 # scheduler.step(eval_loss))
