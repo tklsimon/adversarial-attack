@@ -11,10 +11,10 @@ from attack.random import RandomNoiseAttack
 from dataset import dataset
 from model import model_selector
 from scenario.scenario import Scenario  # noqa
-from scenario.soft_response_defense_scenario import SoftResponseDefenseScenario
+from scenario.kndist_scenario import KnowledgeDistillationScenario
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Soft Defense Script')
+    parser = ArgumentParser(description='Knowledge Distillation Script')
     # model parameters
     parser.add_argument('--lr', default=3e-4, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
@@ -70,18 +70,18 @@ if __name__ == '__main__':
         attacker = PGD(attack_model, args.epsilon, args.alpha, args.noise_epochs)
 
     # Initialize Scenario
-    scenario: Scenario = SoftResponseDefenseScenario(load_path=args.load_path,
-                                                     save_path=args.save_path,
-                                                     batch_size=args.batch_size,
-                                                     lr=args.lr,
-                                                     momentum=args.momentum,
-                                                     weight_decay=args.weight_decay,
-                                                     test_val_ratio=args.test_val_ratio,
-                                                     soft_label=args.soft_label,
-                                                     model=model,
-                                                     attacker=attacker,
-                                                     train_set=train_set,
-                                                     test_set=test_set)
+    scenario: Scenario = KnowledgeDistillationScenario(load_path=args.load_path,
+                                                       save_path=args.save_path,
+                                                       batch_size=args.batch_size,
+                                                       lr=args.lr,
+                                                       momentum=args.momentum,
+                                                       weight_decay=args.weight_decay,
+                                                       test_val_ratio=args.test_val_ratio,
+                                                       soft_label=args.soft_label,
+                                                       model=model,
+                                                       attacker=attacker,
+                                                       train_set=train_set,
+                                                       test_set=test_set)
 
     # Perform Training and Testing
     if not args.dry_run:

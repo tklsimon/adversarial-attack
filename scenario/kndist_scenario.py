@@ -8,7 +8,7 @@ from tqdm import tqdm
 from .base_scenario import BaseScenario
 
 
-class SoftResponseDefenseScenario(BaseScenario):
+class KnowledgeDistillationScenario(BaseScenario):
 
     def train(self, model: nn.Module, device_name: str, train_loader: DataLoader, validation_loader: DataLoader,
               optimizer, scheduler, criterion, save_best: bool = False, epoch: int = 1):
