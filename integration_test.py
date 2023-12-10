@@ -16,7 +16,7 @@ class IntegrationTest(unittest.TestCase):
         self.train_set: Dataset = dataset.get_cifar10_dataset(True, download=True)
         self.test_set: Dataset = dataset.get_cifar10_dataset(False, download=True)
 
-    def test_base_scenario(self):
+    def test_test_base_scenario(self):
         """
         Default Res18 model should have a base accuracy more than 5%
         """
@@ -25,6 +25,16 @@ class IntegrationTest(unittest.TestCase):
         print("Test Accuracy: ", result['accuracy'])
         self.assertGreater(result['accuracy'], 0.05)
         self.assertGreater(0.2, result['accuracy'])
+
+    def test_train_base_scenario(self):
+        """
+        Default Res18 model should have a base accuracy more than 5%
+        """
+        scenario: Scenario = BaseScenario(model=self.model, train_set=self.train_set, test_set=self.test_set)
+        result = scenario.perform(5)
+        print("Test Accuracy: ", result['accuracy'])
+        self.assertGreater(result['accuracy'], 0.75)
+        self.assertGreater(0.85, result['accuracy'])
 
 
 if __name__ == '__main__':
