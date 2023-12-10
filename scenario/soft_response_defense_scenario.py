@@ -65,7 +65,7 @@ class SoftResponseDefenseScenario(BaseScenario):
                     if val_loss['accuracy'] > best_val_score:
                         print("==> current best epoch = %d" % i)
                         best_val_score = val_loss['accuracy']
-                        best_model_state_dict = model.state_dict()
+                        best_model_state_dict = copy.deepcopy(model.state_dict())
                         best_epoch = i
                 else:
                     best_epoch = i
